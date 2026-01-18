@@ -1,0 +1,6 @@
+imagehash
+faiss-cpu
+numpy
+Pillow
+transformers
+torch
