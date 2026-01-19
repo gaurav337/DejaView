@@ -252,7 +252,7 @@ flowchart TD
 
     LoadModels --> F{CLIP Match?}
     
-    F -->|Score ≥ 0.74| G[✅ SIMILAR]
+    F -->|Score ≥ 0.85| G[✅ SIMILAR]
     F -->|No| H[❌ UNIQUE]
     
     C --> I[Return Result]
@@ -390,7 +390,7 @@ print(result)
 |--------|-----------|--------|-------------|
 | **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
 | **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **CLIP** | ≥ 0.74 | Cosine Similarity | 512-dim embeddings, inner product |
+| **CLIP** | ≥ 0.85 | Cosine Similarity | 512-dim embeddings, inner product |
 
 ### Why This Order?
 
