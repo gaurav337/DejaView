@@ -52,14 +52,14 @@ DejaView can detect duplicates across all these transformations:
 #### 🔄 Resized (Scaled up or down)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/resized_original.png) | ✅ Detected |
+| ![Original](assets/examples/resized.jpeg) | ✅ Detected |
 
 ---
 
 #### ✂️ Cropped (Portions removed)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/cropped_original.png) | ✅ Detected |
+| ![Original](assets/examples/cropped.jpeg) | ✅ Detected |
 
 
 ---
@@ -67,7 +67,7 @@ DejaView can detect duplicates across all these transformations:
 #### 📦 Compressed (Quality reduced - JPEG artifacts)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/compressed_original.png) | ✅ Detected |
+| ![Original](assets/examples/compressed.jpeg) | ✅ Detected |
 
 
 ---
@@ -75,7 +75,7 @@ DejaView can detect duplicates across all these transformations:
 #### 🎨 Color-adjusted (Brightness, contrast, saturation changes)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/color_original.png)| ✅ Detected |
+| ![Original](assets/examples/color.jpeg)| ✅ Detected |
 
 
 ---
@@ -83,7 +83,7 @@ DejaView can detect duplicates across all these transformations:
 #### 💧 Watermarked (Text or logos overlaid)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/watermark_original.png) | ✅ Detected |
+| ![Original](assets/examples/watermark.jpeg) | ✅ Detected |
 
 
 ---
@@ -91,7 +91,7 @@ DejaView can detect duplicates across all these transformations:
 #### 🖼️ Slightly edited (Minor retouching or filters)
 | Original | Detection |
 |:--------:|:---------:|
-| ![Original](assets/examples/edited_original.png) | ✅ Detected |
+| ![Original](assets/examples/edited.jpeg) | ✅ Detected |
 
 ---
 
