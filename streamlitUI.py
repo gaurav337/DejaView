@@ -23,7 +23,7 @@ with left:
 
     uploaded_file = st.file_uploader(
         "Choose an image",
-        type=["jpg", "jpeg", "png", "heic"]
+        type=["jpg", "jpeg", "png", "bmp"]
     )
 
     if uploaded_file:
@@ -56,14 +56,17 @@ with right:
             st.metric("Method", result["method"])
 
         with col2:
-            st.metric("Similarity", f"{result['similarity_percentage']}%")
+            st.metric("Similarity", f"{result['similarity_percentage']:.2f}%")
 
         st.markdown("#### Matched Image")
-        st.image(
-            result["matched_image_path"],
-            caption="Most similar image found",
-            width=300
-        )
+        if result.get("matched_image_path"):
+            st.image(
+                result["matched_image_path"],
+                caption="Most similar image found",
+                width=300
+            )
+        else:
+            st.info("No matching image found.")
 
     else:
         st.info("Upload an image and click **Run NDID** to see results.")
