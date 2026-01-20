@@ -57,6 +57,9 @@ with right:
 
         with col2:
             st.metric("Similarity", f"{result['similarity_percentage']:.2f}%")
+        
+        if result.get("message"):
+            st.warning(result["message"])
 
         st.markdown("#### Matched Image")
         if result.get("matched_image_path"):

@@ -1,4 +1,6 @@
 import os
+import sys
+import cv2
 import faiss
 import numpy as np
 import imagehash
@@ -10,6 +12,10 @@ try:
     import Final_preprocessing_hashing as fph
     import Faiss_implementation as fi
     import clip_train as ct
+    
+    # Add final_hist to path for importing hist_matching
+    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'final_hist'))
+    import hist_matching as hm
 except ImportError as e:
     raise ImportError(f"Could not import helper modules. Ensure they are in the same directory. Error: {e}")
 
@@ -23,6 +29,8 @@ CLIP_DIM = 512
 PHASH_THRESHOLD = 4
 WHASH_THRESHOLD = 4
 CLIP_THRESHOLD = 0.85
+HISTOGRAM_VERIFICATION_THRESHOLD = 0.60
+STRUCTURE_THRESHOLD = 10  
 
 phash_manager = None
 whash_manager = None
@@ -93,6 +101,7 @@ def add_to_indices(image_path):
         return False
 
 
+    
 def check_phash(image_path):
     if phash_manager is None:
         return False, 0.0, None
@@ -113,7 +122,6 @@ def check_phash(image_path):
         
         if global_idx < len(phash_manager.paths):
             matched_path = resolve_path(phash_manager.paths[global_idx])
-            # Verify file exists
             if os.path.exists(matched_path):
                 return True, round(sim_pct, 2), matched_path
             else:
@@ -193,35 +201,117 @@ def check_image_pipeline(image_path):
     }
     
     try:
+        source_img = cv2.imread(image_path)
+        if source_img is None:
+             result.update({
+                "status": "Rejected",
+                "message": "Image unnecessary to upload: Could not load image"
+            })
+             return result
+        
+        source_data = hm.preprocess_image(source_img)
+        if source_data is None:
+             result.update({
+                "status": "Rejected",
+                "message": "Image unnecessary to upload: Preprocessing failed"
+             })
+             return result
+             
+        _, gray_check, _ = source_data
+        orb_check = cv2.ORB_create(nfeatures=500)
+        kp_check = orb_check.detect(gray_check, None)
+        
+        if len(kp_check) < STRUCTURE_THRESHOLD:
+            result.update({
+                "status": "Rejected",
+                "message": f"Image unnecessary to upload: Insufficient structure (Keypoints: {len(kp_check)})"
+            })
+            return result
+            
+    except Exception as e_struct:
+        print(f"Error checking structure: {e_struct}")
+        result.update({
+            "status": "Rejected",
+            "message": f"Image unnecessary to upload: Error {e_struct}"
+        })
+        return result
+    
+    def run_verification(matched_path_in):
+        try:
+            matched_img = cv2.imread(matched_path_in)
+            if matched_img is None: return False, 0.0
+            
+            matched_data = hm.preprocess_image(matched_img)
+            if matched_data is None: 
+                return False, 0.0
+            res_normal = hm.compare_image_data(source_data, matched_data)
+            
+            matched_img_flipped = cv2.flip(matched_img, 1)
+            matched_data_flipped = hm.preprocess_image(matched_img_flipped)
+            res_flipped = hm.compare_image_data(source_data, matched_data_flipped)
+            
+            best_res = res_flipped if res_flipped['total'] > res_normal['total'] else res_normal
+            
+            score = best_res['total']
+            print(f"  [Verification] Score: {score:.3f} ({'Flipped' if best_res == res_flipped else 'Normal'})")
+            return score >= HISTOGRAM_VERIFICATION_THRESHOLD, score
+        except Exception as e_ver:
+            print(f"  [Verification Error] {e_ver}")
+            return False, 0.0
+
+    try:
         is_match, sim_pct, matched_path = check_phash(image_path)
         if is_match:
-            status = "Duplicate" if sim_pct == 100.0 else "Similar"
-            result.update({
-                "status": status,
-                "similarity_percentage": sim_pct,
-                "matched_image_path": matched_path,
-                "method": "phash"
-            })
-            return result
-        
+            verified, v_score = run_verification(matched_path)
+            if verified:
+                status = "Duplicate" if sim_pct == 100.0 else "Similar"
+                result.update({
+                    "status": f"{status} (pHash Verified)",
+                    "similarity_percentage": sim_pct,
+                    "matched_image_path": matched_path,
+                    "method": "phash",
+                    "verification_score": round(v_score, 3)
+                })
+                return result
+            else:
+                print(f"pHash match rejected by verification. Score: {v_score:.3f}. Moving to wHash...")
+
         is_match, sim_pct, matched_path = check_whash(image_path)
+
         if is_match:
-            result.update({
-                "status": "Similar",
-                "similarity_percentage": sim_pct,
-                "matched_image_path": matched_path,
-                "method": "whash"
-            })
-            return result
+            verified, v_score = run_verification(matched_path)
+            if verified:
+                result.update({
+                    "status": "Similar (wHash Verified)",
+                    "similarity_percentage": sim_pct,
+                    "matched_image_path": matched_path,
+                    "method": "whash",
+                    "verification_score": round(v_score, 3)
+                })
+                return result
+            else:
+                 print(f"wHash match rejected by verification. Score: {v_score:.3f}. Moving to CLIP...")
         
         is_match, sim_pct, matched_path = check_clip(image_path)
+        
         if is_match:
-            result.update({
-                "status": "Similar",
-                "similarity_percentage": sim_pct,
-                "matched_image_path": matched_path,
-                "method": "clip"
-            })
+            verified, v_score = run_verification(matched_path)
+            if verified:
+                result.update({
+                    "status": "Similar (CLIP Verified)",
+                    "similarity_percentage": sim_pct,
+                    "matched_image_path": matched_path,
+                    "method": "clip",
+                    "verification_score": round(v_score, 3)
+                })
+            else:
+                print(f"CLIP match rejected by verification. Score: {v_score:.3f}.")
+                result.update({
+                    "status": "Unique",
+                    "similarity_percentage": 0.0,
+                    "matched_image_path": None,
+                    "method": "clip"
+                })
         else:
             result.update({
                 "status": "Unique",
