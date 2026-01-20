@@ -1,4 +1,5 @@
 __pycache__/
-images/uploads/
 images/
+images/uploads/
 local_clip_model/
+index/*
