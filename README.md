@@ -50,56 +50,48 @@ Traditional systems struggle to automatically detect these duplicates when image
 DejaView can detect duplicates across all these transformations:
 
 #### 🔄 Resized (Scaled up or down)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/resized_original.png) | ![Resized](assets/examples/resized_transformed.png) | ✅ Detected |
-
-<!-- INSERT YOUR RESIZED EXAMPLE IMAGES IN assets/examples/ -->
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/resized.jpeg) | ✅ Detected |
 
 ---
 
 #### ✂️ Cropped (Portions removed)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/cropped_original.png) | ![Cropped](assets/examples/cropped_transformed.png) | ✅ Detected |
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/cropped.jpeg) | ✅ Detected |
 
-<!-- INSERT YOUR CROPPED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 📦 Compressed (Quality reduced - JPEG artifacts)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/compressed_original.png) | ![Compressed](assets/examples/compressed_transformed.jpg) | ✅ Detected |
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/compressed.jpeg) | ✅ Detected |
 
-<!-- INSERT YOUR COMPRESSED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 🎨 Color-adjusted (Brightness, contrast, saturation changes)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/color_original.png) | ![Color-adjusted](assets/examples/color_transformed.png) | ✅ Detected |
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/color.jpeg)| ✅ Detected |
 
-<!-- INSERT YOUR COLOR-ADJUSTED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 💧 Watermarked (Text or logos overlaid)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/watermark_original.png) | ![Watermarked](assets/examples/watermark_transformed.png) | ✅ Detected |
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/watermark.jpeg) | ✅ Detected |
 
-<!-- INSERT YOUR WATERMARKED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 🖼️ Slightly edited (Minor retouching or filters)
-| Original | Transformed | Detection |
-|:--------:|:-----------:|:---------:|
-| ![Original](assets/examples/edited_original.png) | ![Edited](assets/examples/edited_transformed.png) | ✅ Detected |
-
-<!-- INSERT YOUR EDITED EXAMPLE IMAGES IN assets/examples/ -->
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/edited.jpeg) | ✅ Detected |
 
 ---
 
@@ -117,32 +109,25 @@ DejaView can detect duplicates across all these transformations:
 
 DejaView implements a **multi-layered detection pipeline** that combines:
 
-1. **Structure Check/Featureless Rejection** — Early rejection of low-entropy images (e.g., solid colors).
+
+1. **Structure Check** — Early rejection of featureless images.
 2. **Perceptual Hashing (pHash)** — Fast structural fingerprinting.
 3. **Wavelet Hashing (wHash)** — Frequency-domain analysis for robustness.
-4. **Visual Verification** — Histogram & Feature matching (ORB) to verify matches.
+4. **Visual Verification** — Histogram & Feature matching (ORB) to confirm matches.
 5. **CLIP Embeddings** — Deep semantic understanding via vision transformers.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   DejaView Pipeline                                     │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│ Input ► [Structure Check] ─(Fail)─► REJECT                                              │
-│               │                                                                         │
-│               ▼                                                                         │
-│        [pHash Check] ──(Match)──► [Visual Verifier] ──(Pass)──► DUPLICATE               │
-│               │                         │                                               │
-│               ▼                         ▼ (Fail)                                        │
-│        [wHash Check] ──(Match)──► [Visual Verifier] ──(Pass)──► SIMILAR                 │
-│               │                         │                                               │
-│               ▼                         ▼ (Fail)                                        │
-│         [CLIP Check] ──(Match)──► [Visual Verifier] ──(Pass)──► SIMILAR (Semantic)      │
-│               │                         │                                               │
-│               ▼                         ▼ (Fail)                                        │
-│            UNIQUE                    UNIQUE                                             │
-│                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        DejaView Pipeline                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Input Image ──► pHash Check ──► wHash Check ──► CLIP Check    │
+│                        │              │              │          │
+│                        ▼              ▼              ▼          │
+│                   [Duplicate]    [Similar]      [Similar]       │
+│                    (Fast)        (Medium)       (Semantic)      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -159,7 +144,8 @@ flowchart TB
     subgraph Core["⚙️ Core Processing"]
         DC[duplicate_checker.py]
         
-        subgraph Hashing["🔐 Perceptual Hashing"]
+        subgraph Hashing["🔐 Perceptual Hashing (Linear)"]
+            direction TB
             PH[pHash Check]
             WH[wHash Check]
         end
@@ -183,26 +169,34 @@ flowchart TB
     end
 
     subgraph Models["🤖 AI Models"]
+        ModelCheck{Local Available?}
         LM[Local CLIP Model]
         OM[OpenAI CLIP ViT-B/32]
     end
 
+    %% Flow Connections
     UI --> API
     API --> DC
+    
+    %% Linear Processing Flow
     DC --> PH
-    DC --> WH
-    DC --> CLIP
+    PH --> WH
+    WH --> CLIP
     
-    PH --> PI
-    WH --> WI
-    CLIP --> CI
+    %% Storage Lookups
+    PH <--> PI
+    WH <--> WI
+    CLIP <--> CI
     
+    %% Path Retrievals
     PI --> HP
     WI --> HP
     CI --> CP
     
-    CLIP --> LM
-    LM -.-> OM
+    %% Model Loading Logic
+    CLIP --> ModelCheck
+    ModelCheck -->|Yes| LM
+    ModelCheck -->|No / Fallback| OM
 ```
 
 ---
@@ -253,10 +247,22 @@ flowchart TD
     
     D -->|Distance ≤ 4| V2{Visual Verify?}
     V2 -->|Score ≥ 0.60| E[✅ SIMILAR (wHash Verified)]
-    V2 -->|Fail| F
-    D -->|No| F{CLIP Match?}
+    V2 -->|Fail| LoadModels
+    D -->|No| LoadModels
     
-    F -->|Score ≥ 0.74| V3{Visual Verify?}
+    subgraph LoadModels["🤖 Model Loading"]
+        direction TB
+        Check{Local Model?}
+        Local[Load Local CLIP]
+        Online[Load OpenAI CLIP]
+        
+        Check -->|Available| Local
+        Check -->|Missing| Online
+    end
+
+    LoadModels --> F{CLIP Match?}
+    
+    F -->|Score ≥ 0.85| V3{Visual Verify?}
     V3 -->|Score ≥ 0.60| G[✅ SIMILAR (CLIP Verified)]
     V3 -->|Fail| H
     F -->|No| H[❌ UNIQUE]
@@ -280,11 +286,22 @@ DejaView/
 ├── 📄 streamlitUI.py          # Web interface for image upload & results
 ├── 📄 ndid_model.py           # Bridge between UI and detection pipeline
 ├── 📄 duplicate_checker.py    # Core detection logic with 3-stage pipeline
+├── 📄 add_to_database.py      # Script to incrementally add images to indices
+├── 📄 index_manager.py        # Functional logic for managing FAISS shards & indices
 │
 ├── 📄 Final_preprocessing_hashing.py  # Image preprocessing & hash generation
 ├── 📄 Faiss_implementation.py         # FAISS index creation for hashes
 ├── 📄 clip_train.py                   # CLIP embedding & indexing
 ├── 📄 download_model.py               # Download CLIP model for local use
+│
+├── 📂 final_hist/             # Visual Verification Logic
+│   └── 📄 hist_matching.py    # Histogram & ORB Feature matching
+│
+├── 📂 metrics/                # Evaluation Tools
+│   ├── 📄 create_evaluation_data.py
+│   ├── 📄 add_non_matching.py
+│   ├── 📄 combine_ground_truth.py
+│   └── 📄 evaluate.py
 │
 ├── 📄 phash.index             # FAISS binary index for perceptual hashes
 ├── 📄 whash.index             # FAISS binary index for wavelet hashes
@@ -308,10 +325,14 @@ DejaView/
 | `streamlitUI.py` | Interactive web UI for uploading images and viewing detection results |
 | `ndid_model.py` | Handles file upload, creates temp files, and invokes the detection pipeline |
 | `duplicate_checker.py` | Main orchestrator: runs structure check, pHash/wHash/CLIP checks, and visual verification |
+| `index_manager.py` | Manages loading, searching, and saving of FAISS indices and shards |
+| `add_to_database.py` | Scans `images/` folder and adds new images to all indices (incremental update) |
+| `final_hist/hist_matching.py` | Implements Histogram comparison and ORB feature detection for verification |
 | `Final_preprocessing_hashing.py` | Image preprocessing (EXIF, RGB) and perceptual/wavelet hash computation |
 | `Faiss_implementation.py` | Builds FAISS binary indices from hash values |
 | `clip_train.py` | Generates CLIP embeddings and builds semantic search index |
 | `download_model.py` | Downloads and caches OpenAI CLIP model locally |
+| `metrics/*.py` | Suite of scripts for generating test data and calculating F1/Precision/Recall scores |
 
 ---
 
@@ -352,6 +373,7 @@ Pillow           # Image processing
 transformers     # CLIP model loading
 torch            # Deep learning backend
 streamlit        # Web UI framework
+opencv-python    # Computer Vision (histograms, ORB)
 ```
 
 ---
@@ -384,8 +406,23 @@ print(result)
 #     "matched_image_path": "/path/to/matched_image.png",
 #     "source_image_path": "path/to/your/image.jpg",
 #     "method": "clip"               # phash | whash | clip
+#     "method": "clip"               # phash | whash | clip
 # }
 ```
+
+### 🛠️ Maintenance
+
+To add new images to the database without rebuilding the entire index:
+
+```bash
+python add_to_database.py
+```
+
+This script will:
+1. Scan the `images/` directory.
+2. Identify images that are not yet indexed.
+3. Compute hashes and embeddings for new images.
+4. Update the FAISS indices incrementally.
 
 ---
 
@@ -397,8 +434,7 @@ print(result)
 |--------|-----------|--------|-------------|
 | **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
 | **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **CLIP** | ≥ 0.74 | Cosine Similarity | 512-dim embeddings, inner product |
+| **CLIP** | ≥ 0.85 | Cosine Similarity | 512-dim embeddings, inner product |
 | **Visual Verify** | ≥ 0.60 | Histogram & ORB Score | Combined color/structure/spatial score |
 | **Structure** | ≥ 10 | ORB Keypoints | Minimum feature count to process image |
 
@@ -511,9 +547,53 @@ This project is for educational purposes.
 
 ▶️ **[Click here to watch the full project demonstration](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)**
 
-<!-- REPLACE YOUR_VIDEO_ID with your actual YouTube video ID -->
 
 ---
+
+# Metrics & Evaluation
+
+This directory contains scripts to generate test data and evaluate the performance (F1 Score, Precision, Recall) of the Near-Duplicate Image Detection system.
+
+## Scripts
+
+### 1. `create_evaluation_data.py`
+Generates transformed versions of existing images (resize, crop, compress, color, watermark).
+- **Output**: `evaluation/test_images/should_match/`
+- **Generates**: `evaluation/ground_truth_matches.csv`
+
+### 2. `add_non_matching.py`
+Generates synthetic random images (noise, solid colors) that should NOT match any existing image.
+- **Output**: `evaluation/test_images/should_not_match/`
+- **Generates**: `evaluation/ground_truth_non_matches.csv`
+
+### 3. `combine_ground_truth.py`
+Combines the positive (matches) and negative (non-matches) ground truth files into one master file.
+- **Output**: `evaluation/ground_truth.csv`
+
+### 4. `evaluate.py`
+Runs the detection pipeline against the ground truth dataset and calculates metrics.
+- **Input**: `evaluation/ground_truth.csv`
+- **Output**: 
+    - Console Output: F1 Score, Confusion Matrix, Per-transform accuracy.
+    - File Output: `evaluation/detailed_results.csv`
+
+## How to Run
+
+Run the scripts in the following order from the project root (`d:\clipupdated\DejaView`):
+
+```bash
+# 1. Generate Positive Test Cases (Transformed Images)
+python metrics/create_evaluation_data.py
+
+# 2. Generate Negative Test Cases (Unique/Random Images)
+python metrics/add_non_matching.py
+
+# 3. Combine Ground Truth Data
+python metrics/combine_ground_truth.py
+
+# 4. Run Evaluation
+python metrics/evaluate.py
+```
 
 <p align="center">
   <i>"Through the veil of Maya, DejaView sees the truth."</i>
