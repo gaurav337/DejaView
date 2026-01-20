@@ -117,22 +117,32 @@ DejaView can detect duplicates across all these transformations:
 
 DejaView implements a **multi-layered detection pipeline** that combines:
 
-1. **Perceptual Hashing (pHash)** — Fast structural fingerprinting
-2. **Wavelet Hashing (wHash)** — Frequency-domain analysis for robustness
-3. **CLIP Embeddings** — Deep semantic understanding via vision transformers
+1. **Structure Check/Featureless Rejection** — Early rejection of low-entropy images (e.g., solid colors).
+2. **Perceptual Hashing (pHash)** — Fast structural fingerprinting.
+3. **Wavelet Hashing (wHash)** — Frequency-domain analysis for robustness.
+4. **Visual Verification** — Histogram & Feature matching (ORB) to verify matches.
+5. **CLIP Embeddings** — Deep semantic understanding via vision transformers.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DejaView Pipeline                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Input Image ──► pHash Check ──► wHash Check ──► CLIP Check   │
-│                        │              │              │          │
-│                        ▼              ▼              ▼          │
-│                   [Duplicate]    [Similar]      [Similar]       │
-│                    (Fast)        (Medium)       (Semantic)      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   DejaView Pipeline                                     │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│ Input ► [Structure Check] ─(Fail)─► REJECT                                              │
+│               │                                                                         │
+│               ▼                                                                         │
+│        [pHash Check] ──(Match)──► [Visual Verifier] ──(Pass)──► DUPLICATE               │
+│               │                         │                                               │
+│               ▼                         ▼ (Fail)                                        │
+│        [wHash Check] ──(Match)──► [Visual Verifier] ──(Pass)──► SIMILAR                 │
+│               │                         │                                               │
+│               ▼                         ▼ (Fail)                                        │
+│         [CLIP Check] ──(Match)──► [Visual Verifier] ──(Pass)──► SIMILAR (Semantic)      │
+│               │                         │                                               │
+│               ▼                         ▼ (Fail)                                        │
+│            UNIQUE                    UNIQUE                                             │
+│                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -232,20 +242,30 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[Upload Image] --> B{pHash Match?}
-    B -->|Distance ≤ 4| C[✅ DUPLICATE/SIMILAR]
+    A[Upload Image] --> SC{Structure Check?}
+    SC -->|Keypoints < 10| R[❌ REJECTED (Featureless)]
+    SC -->|Pass| B{pHash Match?}
+    
+    B -->|Distance ≤ 4| V1{Visual Verify?}
+    V1 -->|Score ≥ 0.60| C[✅ DUPLICATE (pHash Verified)]
+    V1 -->|Fail| D
     B -->|No| D{wHash Match?}
     
-    D -->|Distance ≤ 4| E[✅ SIMILAR]
+    D -->|Distance ≤ 4| V2{Visual Verify?}
+    V2 -->|Score ≥ 0.60| E[✅ SIMILAR (wHash Verified)]
+    V2 -->|Fail| F
     D -->|No| F{CLIP Match?}
     
-    F -->|Score ≥ 0.74| G[✅ SIMILAR]
+    F -->|Score ≥ 0.74| V3{Visual Verify?}
+    V3 -->|Score ≥ 0.60| G[✅ SIMILAR (CLIP Verified)]
+    V3 -->|Fail| H
     F -->|No| H[❌ UNIQUE]
     
     C --> I[Return Result]
     E --> I
     G --> I
     H --> I
+    R --> I
     
     I --> J[Display in UI]
 ```
@@ -287,7 +307,7 @@ DejaView/
 |--------|---------|
 | `streamlitUI.py` | Interactive web UI for uploading images and viewing detection results |
 | `ndid_model.py` | Handles file upload, creates temp files, and invokes the detection pipeline |
-| `duplicate_checker.py` | Main orchestrator: loads indices, runs 3-stage detection (pHash → wHash → CLIP) |
+| `duplicate_checker.py` | Main orchestrator: runs structure check, pHash/wHash/CLIP checks, and visual verification |
 | `Final_preprocessing_hashing.py` | Image preprocessing (EXIF, RGB) and perceptual/wavelet hash computation |
 | `Faiss_implementation.py` | Builds FAISS binary indices from hash values |
 | `clip_train.py` | Generates CLIP embeddings and builds semantic search index |
@@ -377,7 +397,10 @@ print(result)
 |--------|-----------|--------|-------------|
 | **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
 | **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
+| **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
 | **CLIP** | ≥ 0.74 | Cosine Similarity | 512-dim embeddings, inner product |
+| **Visual Verify** | ≥ 0.60 | Histogram & ORB Score | Combined color/structure/spatial score |
+| **Structure** | ≥ 10 | ORB Keypoints | Minimum feature count to process image |
 
 ### Why This Order?
 
