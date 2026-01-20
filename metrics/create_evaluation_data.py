@@ -58,7 +58,7 @@ def create_transformations(input_path, output_dir, base_name):
     try:
         watermarked = img.copy()
         draw = ImageDraw.Draw(watermarked)
-        text = "DEJAVIEW"
+        text = "SAMPLE"
         w, h = img.size
         
         draw.text((w//4, h//2), text, fill=(255, 255, 255))

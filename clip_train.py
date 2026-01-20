@@ -10,13 +10,12 @@ IMAGE_FOLDER = 'batch_1'
 INDEX_FILENAME = 'clip_index.index'
 PATHS_FILENAME = 'clip_image_paths.npy'
 EMBEDDINGS_FILENAME = 'clip_embeddings.npy'
-SIMILARITY_THRESHOLD = 0.85
+SIMILARITY_THRESHOLD = 0.74
 ONLINE_MODEL_ID = "openai/clip-vit-base-patch32"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_MODEL_PATH = os.path.join(BASE_DIR, "local_clip_model")
 CLIP_DIM = 512
 
-# Load model
 def load_model():
     if os.path.exists(LOCAL_MODEL_PATH):
         print(f"Loading CLIP from local path: {LOCAL_MODEL_PATH}")

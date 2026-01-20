@@ -50,48 +50,56 @@ Traditional systems struggle to automatically detect these duplicates when image
 DejaView can detect duplicates across all these transformations:
 
 #### 🔄 Resized (Scaled up or down)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/resized.jpeg) | ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/resized_original.png) | ![Resized](assets/examples/resized_transformed.png) | ✅ Detected |
+
+<!-- INSERT YOUR RESIZED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### ✂️ Cropped (Portions removed)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/cropped.jpeg) | ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/cropped_original.png) | ![Cropped](assets/examples/cropped_transformed.png) | ✅ Detected |
 
+<!-- INSERT YOUR CROPPED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 📦 Compressed (Quality reduced - JPEG artifacts)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/compressed.jpeg) | ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/compressed_original.png) | ![Compressed](assets/examples/compressed_transformed.jpg) | ✅ Detected |
 
+<!-- INSERT YOUR COMPRESSED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 🎨 Color-adjusted (Brightness, contrast, saturation changes)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/color.jpeg)| ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/color_original.png) | ![Color-adjusted](assets/examples/color_transformed.png) | ✅ Detected |
 
+<!-- INSERT YOUR COLOR-ADJUSTED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 💧 Watermarked (Text or logos overlaid)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/watermark.jpeg) | ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/watermark_original.png) | ![Watermarked](assets/examples/watermark_transformed.png) | ✅ Detected |
 
+<!-- INSERT YOUR WATERMARKED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
 #### 🖼️ Slightly edited (Minor retouching or filters)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/edited.jpeg) | ✅ Detected |
+| Original | Transformed | Detection |
+|:--------:|:-----------:|:---------:|
+| ![Original](assets/examples/edited_original.png) | ![Edited](assets/examples/edited_transformed.png) | ✅ Detected |
+
+<!-- INSERT YOUR EDITED EXAMPLE IMAGES IN assets/examples/ -->
 
 ---
 
@@ -118,7 +126,7 @@ DejaView implements a **multi-layered detection pipeline** that combines:
 │                        DejaView Pipeline                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   Input Image ──► pHash Check ──► wHash Check ──► CLIP Check    │
+│   Input Image ──► pHash Check ──► wHash Check ──► CLIP Check   │
 │                        │              │              │          │
 │                        ▼              ▼              ▼          │
 │                   [Duplicate]    [Similar]      [Similar]       │
@@ -141,8 +149,7 @@ flowchart TB
     subgraph Core["⚙️ Core Processing"]
         DC[duplicate_checker.py]
         
-        subgraph Hashing["🔐 Perceptual Hashing (Linear)"]
-            direction TB
+        subgraph Hashing["🔐 Perceptual Hashing"]
             PH[pHash Check]
             WH[wHash Check]
         end
@@ -166,34 +173,26 @@ flowchart TB
     end
 
     subgraph Models["🤖 AI Models"]
-        ModelCheck{Local Available?}
         LM[Local CLIP Model]
         OM[OpenAI CLIP ViT-B/32]
     end
 
-    %% Flow Connections
     UI --> API
     API --> DC
-    
-    %% Linear Processing Flow
     DC --> PH
-    PH --> WH
-    WH --> CLIP
+    DC --> WH
+    DC --> CLIP
     
-    %% Storage Lookups
-    PH <--> PI
-    WH <--> WI
-    CLIP <--> CI
+    PH --> PI
+    WH --> WI
+    CLIP --> CI
     
-    %% Path Retrievals
     PI --> HP
     WI --> HP
     CI --> CP
     
-    %% Model Loading Logic
-    CLIP --> ModelCheck
-    ModelCheck -->|Yes| LM
-    ModelCheck -->|No / Fallback| OM
+    CLIP --> LM
+    LM -.-> OM
 ```
 
 ---
@@ -238,21 +237,9 @@ flowchart TD
     B -->|No| D{wHash Match?}
     
     D -->|Distance ≤ 4| E[✅ SIMILAR]
-    D -->|No| LoadModels
+    D -->|No| F{CLIP Match?}
     
-    subgraph LoadModels["🤖 Model Loading"]
-        direction TB
-        Check{Local Model?}
-        Local[Load Local CLIP]
-        Online[Load OpenAI CLIP]
-        
-        Check -->|Available| Local
-        Check -->|Missing| Online
-    end
-
-    LoadModels --> F{CLIP Match?}
-    
-    F -->|Score ≥ 0.85| G[✅ SIMILAR]
+    F -->|Score ≥ 0.74| G[✅ SIMILAR]
     F -->|No| H[❌ UNIQUE]
     
     C --> I[Return Result]
@@ -390,7 +377,7 @@ print(result)
 |--------|-----------|--------|-------------|
 | **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
 | **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **CLIP** | ≥ 0.85 | Cosine Similarity | 512-dim embeddings, inner product |
+| **CLIP** | ≥ 0.74 | Cosine Similarity | 512-dim embeddings, inner product |
 
 ### Why This Order?
 
@@ -501,53 +488,9 @@ This project is for educational purposes.
 
 ▶️ **[Click here to watch the full project demonstration](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)**
 
+<!-- REPLACE YOUR_VIDEO_ID with your actual YouTube video ID -->
 
 ---
-
-# Metrics & Evaluation
-
-This directory contains scripts to generate test data and evaluate the performance (F1 Score, Precision, Recall) of the Near-Duplicate Image Detection system.
-
-## Scripts
-
-### 1. `create_evaluation_data.py`
-Generates transformed versions of existing images (resize, crop, compress, color, watermark).
-- **Output**: `evaluation/test_images/should_match/`
-- **Generates**: `evaluation/ground_truth_matches.csv`
-
-### 2. `add_non_matching.py`
-Generates synthetic random images (noise, solid colors) that should NOT match any existing image.
-- **Output**: `evaluation/test_images/should_not_match/`
-- **Generates**: `evaluation/ground_truth_non_matches.csv`
-
-### 3. `combine_ground_truth.py`
-Combines the positive (matches) and negative (non-matches) ground truth files into one master file.
-- **Output**: `evaluation/ground_truth.csv`
-
-### 4. `evaluate.py`
-Runs the detection pipeline against the ground truth dataset and calculates metrics.
-- **Input**: `evaluation/ground_truth.csv`
-- **Output**: 
-    - Console Output: F1 Score, Confusion Matrix, Per-transform accuracy.
-    - File Output: `evaluation/detailed_results.csv`
-
-## How to Run
-
-Run the scripts in the following order from the project root (`d:\clipupdated\DejaView`):
-
-```bash
-# 1. Generate Positive Test Cases (Transformed Images)
-python metrics/create_evaluation_data.py
-
-# 2. Generate Negative Test Cases (Unique/Random Images)
-python metrics/add_non_matching.py
-
-# 3. Combine Ground Truth Data
-python metrics/combine_ground_truth.py
-
-# 4. Run Evaluation
-python metrics/evaluate.py
-```
 
 <p align="center">
   <i>"Through the veil of Maya, DejaView sees the truth."</i>

@@ -22,7 +22,7 @@ def main():
     print(f"ignoring folder: {uploads_dir_name}")
     
     count = 0
-    valid_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.bmp'}
+    valid_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff'}
 
     for root, dirs, files in os.walk(images_dir):
         if uploads_dir_name in dirs:

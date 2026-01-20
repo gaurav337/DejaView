@@ -14,6 +14,7 @@ clip_index = faiss.IndexFlatIP(CLIP_DIM)
 
 image_paths = []
 
+
 def hash_to_faiss_vector(hex_str):
     return np.frombuffer(bytes.fromhex(hex_str), dtype=np.uint8)
 
