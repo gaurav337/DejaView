@@ -237,18 +237,20 @@ flowchart LR
 ```mermaid
 flowchart TD
     A[Upload Image] --> SC{Structure Check?}
-    SC -->|Keypoints < 10| R[❌ REJECTED (Featureless)]
+    SC -->|Keypoints < 10| R[❌ REJECTED - Featureless]
     SC -->|Pass| B{pHash Match?}
     
     B -->|Distance ≤ 4| V1{Visual Verify?}
-    V1 -->|Score ≥ 0.60| C[✅ DUPLICATE (pHash Verified)]
+    V1 -->|Score ≥ 0.60| C[✅ DUPLICATE - pHash Verified]
     V1 -->|Fail| D
     B -->|No| D{wHash Match?}
     
     D -->|Distance ≤ 4| V2{Visual Verify?}
-    V2 -->|Score ≥ 0.60| E[✅ SIMILAR (wHash Verified)]
-    V2 -->|Fail| LoadModels
-    D -->|No| LoadModels
+    V2 -->|Score ≥ 0.60| E[✅ SIMILAR - wHash Verified]
+    
+    %% FIX: Connect to the 'Check' node inside the subgraph, not the subgraph itself
+    V2 -->|Fail| Check
+    D -->|No| Check
     
     subgraph LoadModels["🤖 Model Loading"]
         direction TB
@@ -260,10 +262,12 @@ flowchart TD
         Check -->|Missing| Online
     end
 
-    LoadModels --> F{CLIP Match?}
+    %% FIX: Connect from the nodes inside the subgraph to F
+    Local --> F{CLIP Match?}
+    Online --> F
     
     F -->|Score ≥ 0.85| V3{Visual Verify?}
-    V3 -->|Score ≥ 0.60| G[✅ SIMILAR (CLIP Verified)]
+    V3 -->|Score ≥ 0.60| G[✅ SIMILAR - CLIP Verified]
     V3 -->|Fail| H
     F -->|No| H[❌ UNIQUE]
     
