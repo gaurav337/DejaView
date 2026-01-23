@@ -1,6 +1,5 @@
 import os
 import sys
-import cv2
 import faiss
 import numpy as np
 import imagehash
@@ -12,10 +11,8 @@ try:
     import Final_preprocessing_hashing as fph
     import Faiss_implementation as fi
     import clip_train as ct
-    
-    # Add final_hist to path for importing hist_matching
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'final_hist'))
-    import hist_matching as hm
+    import dino_train as dt
+    from final_hist.hist_matching import hist_match, get_feature_count
 except ImportError as e:
     raise ImportError(f"Could not import helper modules. Ensure they are in the same directory. Error: {e}")
 
@@ -25,21 +22,23 @@ INDEX_DIR = os.path.join(BASE_DIR, "index")
 PHASH_BITS = 64
 WHASH_BITS = 64
 CLIP_DIM = 512
+DINO_DIM = 768
 
 PHASH_THRESHOLD = 4
 WHASH_THRESHOLD = 4
-CLIP_THRESHOLD = 0.85
-HISTOGRAM_VERIFICATION_THRESHOLD = 0.60
-STRUCTURE_THRESHOLD = 10  
+CLIP_THRESHOLD = 0.69
+DINO_THRESHOLD = 0.82
+HIST_THRESHOLD = 0.80   
 
 phash_manager = None
 whash_manager = None
 clip_manager = None
+dino_manager = None
 
 def load_resources():
-    global phash_manager, whash_manager, clip_manager
+    global phash_manager, whash_manager, clip_manager, dino_manager
     
-    print("Loading indices...")
+    print("Loading indices ")
     
     if not os.path.exists(INDEX_DIR):
         os.makedirs(INDEX_DIR)
@@ -47,19 +46,45 @@ def load_resources():
     whash_manager = IndexShardManager(INDEX_DIR, "whash", WHASH_BITS, index_type='binary')
     
     clip_manager = IndexShardManager(INDEX_DIR, "clip", CLIP_DIM, index_type='flat')
+    dino_manager = IndexShardManager(INDEX_DIR, "dino", DINO_DIM, index_type='flat')
     
     print("Resources loaded successfully")
 
     if not hasattr(ct, 'model') or not hasattr(ct, 'processor'):
         print("Warning: CLIP model/processor not found in clip_train module")
+    
+    if not hasattr(dt, 'model') or not hasattr(dt, 'processor'):
+        print("Warning: DINO model/processor not found in dino_train module")
 
 
 def resolve_path(path_entry):
     path_entry = path_entry.replace("\\", "/")
-    
-    if os.path.isabs(path_entry):
-        return path_entry
+    if os.path.exists(path_entry):
+        return os.path.abspath(path_entry)
         
+    if "/DejaView/" in path_entry:
+        relative_part = path_entry.split("/DejaView/", 1)[1]
+        candidate = os.path.join(BASE_DIR, relative_part)
+        if os.path.exists(candidate):
+            return os.path.abspath(candidate)
+            
+    basename = os.path.basename(path_entry)
+    
+    candidate_images = os.path.join(BASE_DIR, "images", basename)
+    if os.path.exists(candidate_images):
+        return os.path.abspath(candidate_images)
+        
+    candidate_root = os.path.join(BASE_DIR, basename)
+    if os.path.exists(candidate_root):
+        return os.path.abspath(candidate_root)
+        
+    candidate_clip = os.path.join(BASE_DIR, "CLIP", basename)
+    if os.path.exists(candidate_clip):
+        return os.path.abspath(candidate_clip)
+
+    if os.path.isabs(path_entry):
+        pass
+
     if "/" not in path_entry:
         return os.path.abspath(os.path.join(BASE_DIR, "images", path_entry))
     
@@ -75,25 +100,30 @@ def add_to_indices(image_path):
         load_resources()
 
     try:
-        p_hash, w_hash = fph.pw_hash(image_path)
-
-        ph_str = str(p_hash)
-        wh_str = str(w_hash)
+        augmented_hashes = fph.get_augmented_hashes(image_path)
         
-        phash_vec = fi.hash_to_faiss_vector(ph_str)
-        whash_vec = fi.hash_to_faiss_vector(wh_str)
-        
-        phash_manager.add(phash_vec, image_path)
-        whash_manager.add(whash_vec, image_path)
+        for p_hash, w_hash, aug_name in augmented_hashes:
+            ph_str = str(p_hash)
+            wh_str = str(w_hash)
+            
+            phash_vec = fi.hash_to_faiss_vector(ph_str)
+            whash_vec = fi.hash_to_faiss_vector(wh_str)
+            
+            phash_manager.add(phash_vec, image_path)
+            whash_manager.add(whash_vec, image_path)
         
         clip_emb = ct.get_clip_embedding(image_path)
         clip_manager.add(clip_emb, image_path)
 
-        phash_manager.persist()
-        whash_manager.persist()
-        clip_manager.persist()
+        dino_emb = dt.get_dino_embedding(image_path)
+        dino_manager.add(dino_emb, image_path)
+
+        # phash_manager.persist()
+        # whash_manager.persist()
+        # clip_manager.persist()
+        # dino_manager.persist()
         
-        print(f"Successfully added image to indices: {image_path}")
+        # print(f"Successfully added image to indices: {image_path}")
         return True
     
     except Exception as e:
@@ -184,6 +214,34 @@ def check_clip(image_path):
     return False, 0.0, None
 
 
+def check_dino(image_path):
+    if dino_manager is None:
+        return False, 0.0, None
+    
+    emb = dt.get_dino_embedding(image_path)
+    if emb is None:
+        return False, 0.0, None
+    
+    results = dino_manager.search(emb, 1)
+    
+    if not results:
+        return False, 0.0, None
+        
+    score, global_idx = results[0]
+    
+    if score >= DINO_THRESHOLD:
+        sim_pct = round(score * 100.0, 2)
+        
+        if global_idx < len(dino_manager.paths):
+            matched_path = resolve_path(dino_manager.paths[global_idx])
+            if os.path.exists(matched_path):
+                return True, sim_pct, matched_path
+            else:
+                print(f"Warning: Index returned missing file: {matched_path}")
+    
+    return False, 0.0, None
+
+
 def check_image_pipeline(image_path):
 
     if not os.path.exists(image_path):
@@ -201,125 +259,64 @@ def check_image_pipeline(image_path):
     }
     
     try:
-        source_img = cv2.imread(image_path)
-        if source_img is None:
+        feature_count = get_feature_count(image_path)
+        if feature_count < 20:
              result.update({
                 "status": "Rejected",
-                "message": "Image unnecessary to upload: Could not load image"
+                "similarity_percentage": 0.0,
+                "matched_image_path": None,
+                "method": "insufficient_features"
             })
              return result
+
+        is_match1, sim_pct1, matched_path1 = check_phash(image_path)
         
-        source_data = hm.preprocess_image(source_img)
-        if source_data is None:
-             result.update({
-                "status": "Rejected",
-                "message": "Image unnecessary to upload: Preprocessing failed"
-             })
-             return result
-             
-        _, gray_check, _ = source_data
-        orb_check = cv2.ORB_create(nfeatures=500)
-        kp_check = orb_check.detect(gray_check, None)
-        
-        if len(kp_check) < STRUCTURE_THRESHOLD:
+        is_match2, sim_pct2, matched_path2 = check_whash(image_path)
+
+        if(sim_pct1>92 and sim_pct2>92):
+            sim_pct=(sim_pct1+sim_pct2)/2
             result.update({
-                "status": "Rejected",
-                "message": f"Image unnecessary to upload: Insufficient structure (Keypoints: {len(kp_check)})"
+                "status": "Similar (pHash & wHash)",
+                "similarity_percentage": sim_pct,
+                "matched_image_path": matched_path1,
+                "method": "phash & whash"
             })
             return result
-            
-    except Exception as e_struct:
-        print(f"Error checking structure: {e_struct}")
-        result.update({
-            "status": "Rejected",
-            "message": f"Image unnecessary to upload: Error {e_struct}"
-        })
-        return result
-    
-    def run_verification(matched_path_in):
-        try:
-            matched_img = cv2.imread(matched_path_in)
-            if matched_img is None: return False, 0.0
-            
-            matched_data = hm.preprocess_image(matched_img)
-            if matched_data is None: 
-                return False, 0.0
-            res_normal = hm.compare_image_data(source_data, matched_data)
-            
-            matched_img_flipped = cv2.flip(matched_img, 1)
-            matched_data_flipped = hm.preprocess_image(matched_img_flipped)
-            res_flipped = hm.compare_image_data(source_data, matched_data_flipped)
-            
-            best_res = res_flipped if res_flipped['total'] > res_normal['total'] else res_normal
-            
-            score = best_res['total']
-            print(f"  [Verification] Score: {score:.3f} ({'Flipped' if best_res == res_flipped else 'Normal'})")
-            return score >= HISTOGRAM_VERIFICATION_THRESHOLD, score
-        except Exception as e_ver:
-            print(f"  [Verification Error] {e_ver}")
-            return False, 0.0
-
-    try:
-        is_match, sim_pct, matched_path = check_phash(image_path)
-        if is_match:
-            verified, v_score = run_verification(matched_path)
-            if verified:
-                status = "Duplicate" if sim_pct == 100.0 else "Similar"
-                result.update({
-                    "status": f"{status} (pHash Verified)",
-                    "similarity_percentage": sim_pct,
-                    "matched_image_path": matched_path,
-                    "method": "phash",
-                    "verification_score": round(v_score, 3)
-                })
-                return result
-            else:
-                print(f"pHash match rejected by verification. Score: {v_score:.3f}. Moving to wHash...")
-
-        is_match, sim_pct, matched_path = check_whash(image_path)
-
-        if is_match:
-            verified, v_score = run_verification(matched_path)
-            if verified:
-                result.update({
-                    "status": "Similar (wHash Verified)",
-                    "similarity_percentage": sim_pct,
-                    "matched_image_path": matched_path,
-                    "method": "whash",
-                    "verification_score": round(v_score, 3)
-                })
-                return result
-            else:
-                 print(f"wHash match rejected by verification. Score: {v_score:.3f}. Moving to CLIP...")
         
-        is_match, sim_pct, matched_path = check_clip(image_path)
-        
-        if is_match:
-            verified, v_score = run_verification(matched_path)
-            if verified:
-                result.update({
-                    "status": "Similar (CLIP Verified)",
-                    "similarity_percentage": sim_pct,
-                    "matched_image_path": matched_path,
-                    "method": "clip",
-                    "verification_score": round(v_score, 3)
-                })
-            else:
-                print(f"CLIP match rejected by verification. Score: {v_score:.3f}.")
-                result.update({
-                    "status": "Unique",
-                    "similarity_percentage": 0.0,
-                    "matched_image_path": None,
-                    "method": "clip"
-                })
-        else:
+        # hist_score, hist_details = hist_match(image_path, matched_path1)
+        # if hist_score > HIST_THRESHOLD:
+        #     result.update({
+        #         "status": "Similar",
+        #         "similarity_percentage": sim_pct    ,
+        #         "matched_image_path": matched_path1,
+        #         "method": f"phash & whash (Histogram Matching) ({hist_details.get('orientation', 'Original')})"
+        #     })
+        #     return result
+            
+
+        is_match, sim_pct, matched_path = check_dino(image_path)
+
+        if(sim_pct >= DINO_THRESHOLD*100):
             result.update({
-                "status": "Unique",
+                "status": "Similar",
                 "similarity_percentage": sim_pct,
                 "matched_image_path": matched_path,
-                "method": "clip"
+                "method": "DINO"
             })
-            
+            return result
+        elif(sim_pct < 50):
+            return result
+        else:
+            is_match, sim_pct, matched_path = check_clip(image_path)
+            if is_match:
+                result.update({
+                    "status": "Similar",
+                    "similarity_percentage": sim_pct,
+                    "matched_image_path": matched_path,
+                    "method": "CLIP"
+                })
+            return result
+
     except Exception as e:
         print(f"Error processing image: {e}")
         result["error"] = str(e)

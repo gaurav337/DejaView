@@ -47,6 +47,12 @@ def run_ndid(uploaded_file):
             os.remove(tmp_path)
         print(f"Error in run_ndid: {e}")
         if 'result' not in locals():
-            result = {"status": "Error", "error": str(e)}
+            result = {
+                "status": "Error", 
+                "error": str(e),
+                "method": "N/A",
+                "similarity_percentage": 0.0,
+                "matched_image_path": None
+            }
 
     return result

@@ -643,7 +643,7 @@ python metrics/evaluate.py
 |---------|-------------|------|
 | **Google Landmarks V2** | 5M+ landmark images with near-duplicates | [GitHub](https://github.com/cvdfoundation/google-landmark) |
 | **INRIA Copydays** | Benchmark for copy detection with distortions | [INRIA](https://thoth.inrialpes.fr/~jegou/data.php.html#copydays) |
-| **DISC21 (Meta AI)** | Dataset released for the Image Similarity Challenge 2021 | [Github](https://github.com/facebookresearch/disc21) |
+| **California-ND** | Near-duplicate detection benchmark | [Paper](https://dl.acm.org/doi/10.1145/2911996.2912036) |
 
 ---
 

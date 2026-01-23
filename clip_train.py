@@ -6,14 +6,14 @@ from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 
 # Constants
-IMAGE_FOLDER = 'batch_1'
+IMAGE_FOLDER = 'images'
 INDEX_FILENAME = 'clip_index.index'
 PATHS_FILENAME = 'clip_image_paths.npy'
 EMBEDDINGS_FILENAME = 'clip_embeddings.npy'
 SIMILARITY_THRESHOLD = 0.74
 ONLINE_MODEL_ID = "openai/clip-vit-base-patch32"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOCAL_MODEL_PATH = os.path.join(BASE_DIR, "local_clip_model")
+LOCAL_MODEL_PATH = os.path.join(BASE_DIR, "models", "clipViTb32")
 CLIP_DIM = 512
 
 def load_model():
@@ -32,19 +32,29 @@ def load_model():
     return model, processor
 
 model, processor = load_model()
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = model.to(device)
 model.eval()
 
 
 clip_index = faiss.IndexFlatIP(CLIP_DIM)
 
 image_paths = []
-embeddings_list = []
 
 
 def get_clip_embedding(image_path):
 
     img = Image.open(image_path).convert("RGB")
-    inputs = processor(images=img, return_tensors="pt")
+    
+    inputs = processor(
+        images=img, 
+        return_tensors="pt", 
+        padding=True,
+        do_center_crop=False,
+        do_resize=True,
+        size={"height": 224, "width": 224}
+    )
+    inputs = inputs.to(device)
     
     with torch.no_grad():
         image_features = model.get_image_features(**inputs)
@@ -57,7 +67,8 @@ def get_clip_embedding(image_path):
 def add_image_to_faiss(image_path):
     
     emb = get_clip_embedding(image_path)
-    clip_index.add(emb)
-    embeddings_list.append(emb)
-    image_paths.append(image_path)
+    if emb is not None:
+        clip_index.add(emb)
+        image_paths.append(image_path)
+        print(f"Added {image_path} to clip index.")
 

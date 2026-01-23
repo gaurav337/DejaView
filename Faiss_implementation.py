@@ -12,11 +12,20 @@ whash_index = faiss.IndexBinaryFlat(WHASH_BITS)
 CLIP_DIM = 512
 clip_index = faiss.IndexFlatIP(CLIP_DIM)
 
+DINO_DIM = 768
+dino_index = faiss.IndexFlatIP(DINO_DIM)
+
 image_paths = []
 
 
-def hash_to_faiss_vector(hex_str):
-    return np.frombuffer(bytes.fromhex(hex_str), dtype=np.uint8)
+def hash_to_faiss_vector(hash_input):
+    if hasattr(hash_input, 'hash'):
+        # It's an ImageHash object with a boolean array
+        packed_arr = np.packbits(hash_input.hash.flatten())
+        return packed_arr.reshape(1, -1)
+    
+    # Fallback to original hex string handling for compatibility
+    return np.frombuffer(bytes.fromhex(hash_input), dtype=np.uint8).reshape(1, -1)
 
 
 def add_image_to_faiss(image_name,p_hash,w_hash):
@@ -65,4 +74,5 @@ if __name__ == "__main__":
 
     phash_index = faiss.read_index_binary("phash.index")
     whash_index = faiss.read_index_binary("whash.index")
+
     image_paths = np.load("image_paths.npy").tolist()
