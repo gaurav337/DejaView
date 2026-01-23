@@ -15,9 +15,9 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 | ![Ref](car_flip/Screenshot%20from%202026-01-23%2012-27-54.png) | ![Target](car_flip/Screenshot%20from%202026-01-23%2012-28-41.png) |
 
 ### Model Analysis
-1.  **CLIP**: **FAIL**. The text description "A photo of a yellow car" perfectly matches both images. The semantic embedding is identical because the "meaning" hasn't changed.
-2.  **DINOv2**: **FAIL**. Trained with Self-Supervised Learning (SSL) using data augmentation (random flips). It is explicitly trained to produce the same embedding for a flipped image.
-3.  **ResNet50**: **FAIL**. Uses **Global Max Pooling**. The feature map for "Wheel" activates regardless of whether it's on the left or right side of the image.
+1.  **CLIP (Score: 66)**: Highest relative similarity. The semantic concept ("Yellow Car") is identical, but the score isn't 100, likely due to subtle compositional changes in the embedding.
+2.  **DINOv2 (Score: 50)**: Moderate similarity. While DINO is trained with augmentation, the specific feature arrangement still heavily penalizes the flip.
+3.  **ResNet50 (Score: 40)**: Lowest similarity. Despite pooling, the spatial features (wheels on left vs right) create distinct enough activation maps to drive the score down. Both DINO and ResNet successfully see these as "Different" files compared to CLIP.
 
 ### Suggested Technique
 *   **Perceptual Hashing (pHash)**: Use DCT-based hashing which preserves low-frequency spatial arrangement. A flip changes the frequency spectrum, resulting in a distinct hash.
