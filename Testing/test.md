@@ -64,9 +64,14 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 This section validates the algorithms using the control set.
 
 ## Validation Data
-| Reference Image | Target Image | Control Image | Analysis Graph |
-| :---: | :---: | :---: | :---: |
-| ![Ref](hash_test_person.png) | ![Target](hist_test_person.png) | ![Control](hash_test_dice.png) | ![Graph](hist_graph.png) |
+| Reference Image | Target Image | Control Image |
+| :---: | :---: | :---: |
+| ![Ref](hash_test_person.png) | ![Target](hist_test_person.png) | ![Control](hash_test_dice.png) |
+
+## Histogram Analysis
+| Ref Histogram | Target Histogram | Control Histogram |
+| :---: | :---: | :---: |
+| ![Hist Ref](hist_plot_hash_test_person.png) | ![Hist Target](hist_plot_hist_test_person.png) | ![Hist Control](hist_plot_hash_test_dice.png) |
 
 ## Technical Validation
 
@@ -76,6 +81,7 @@ This section validates the algorithms using the control set.
     *   **pHash**: `0`
     *   **wHash**: `0`
     *   **Histogram**: `1.000`
+
 *   **Conclusion**: The system produces **Deterministic Results**. Identical inputs yield identical hashes.
 
 ### 2. The Histogram Failure Case (False Positive)
