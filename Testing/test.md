@@ -10,14 +10,20 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 ## 1. The Invariance Paradox (`car_flip`)
 **Scenario**: Horizontal Flip of the same source image.
 
-| Reference | Variant (Flipped) |
-| :---: | :---: |
-| ![Ref](car_flip/Screenshot%20from%202026-01-23%2012-27-54.png) | ![Target](car_flip/Screenshot%20from%202026-01-23%2012-28-41.png) |
+| | | |
+| :---: | :---: | :---: |
+| ![Ref](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-27-54.pnghttps://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-27-54.png) | ![Target]([car_flip/target.png](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-28-17.png)) | ![Context]([car_flip/screenshot.png](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-28-41.png)) |
 
-### Model Analysis
-1.  **CLIP (Score: 66)**: Highest relative similarity. The semantic concept ("Yellow Car") is identical, but the score isn't 100, likely due to subtle compositional changes in the embedding.
-2.  **DINOv2 (Score: 50)**: Moderate similarity. While DINO is trained with augmentation, the specific feature arrangement still heavily penalizes the flip.
-3.  **ResNet50 (Score: 40)**: Lowest similarity. Despite pooling, the spatial features (wheels on left vs right) create distinct enough activation maps to drive the score down. Both DINO and ResNet successfully see these as "Different" files compared to CLIP.
+### Model Analysis### Model Analysis
+
+The similarity scores are surprisingly low for a simple geometric transformation. Here is why:
+
+1.  **CLIP (Score: 66)**: Highest relative similarity. The semantic concept ("Yellow Car") is identical, but the score isn't 100.
+    *   **Reason**: CLIP's Vision Transformer (ViT) splits images into patches. A flipped image changes the *order* of these positional embeddings. While the aggregate concept is preserved, the vector position shifts in the high-dimensional space.
+2.  **DINOv2 (Score: 50)**: Moderate similarity.
+    *   **Reason**: DINO uses positional embeddings to understand scene structure. A flip disrupts the expected spatial relationships (e.g., driver's side vs passenger side features), causing the embeddings to diverge.
+3.  **ResNet50 (Score: 40)**: Lowest similarity.
+    *   **Reason**: ResNet relies on spatial feature maps. The activation for "Front Wheel" moves from coordinate $(x, y)$ to $(width-x, y)$. Without global pooling invariance for this specific operation, the final feature vectors are mathematically distinct.
 
 ### Suggested Technique
 *   **Perceptual Hashing (pHash)**: Use DCT-based hashing which preserves low-frequency spatial arrangement. A flip changes the frequency spectrum, resulting in a distinct hash.
@@ -28,14 +34,14 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 ## 2. The Semantic Gap (`desc_mismatch`)
 **Scenario**: Different content/text, same layout/palette.
 
-| Image A | Image B |
-| :---: | :---: |
-| ![ImgA](desc_mismatch/Screenshot%20from%202026-01-23%2012-38-53.png) | ![ImgB](desc_mismatch/Screenshot%20from%202026-01-23%2012-39-03.png) |
+| | | |
+| :---: | :---: | :---: |
+| ![ImgA](desc_mismatch/img_a.png) | ![ImgB](desc_mismatch/img_b.png) | ![Context](desc_mismatch/screenshot.png) |
 
 ### Model Analysis
-1.  **CLIP**: **FAIL**. Both images map to the concept "Dark mode softare with text". CLIP is not an OCR engine; it aligns visual concepts to text. Since the concept is identical, the embeddings collapse to the same point.
-2.  **DINOv2**: **FAIL**. DINO focuses on the "Global Layout" and "Texture". Since the layout (text box shape) and texture (grey background) are identical, it sees them as the same object class.
-3.  **ResNet50**: **FAIL**. Deep CNNs are skewed towards **Texture Bias** rather than Shape Bias. The dominant texture (background noise) overwhelms the fine-grained shape differences of the letters.
+1.  **CLIP**: **FAIL (Significant Match)**. CLIP demonstrates strong concept matching (like matching "text apple" to "picture apple"). Since the visual concept ("Software Interface") is the same, it ignores the specific character differences, resulting in a high similarity score.
+2.  **DINOv2**: **PASS (Distinct)**. DINO acts more like a traditional vision system here; it likely notices the pixel-level or structural differences in the text blocks, resulting in a lower score that distinguishes the images.
+3.  **ResNet50**: **PASS (Distinct)**. The convolutional features detect the edge and texture differences created by the different text characters, allowing it to distinguish the two images.
 
 ### Suggested Technique
 *   **Wavelet Hashing (wHash)**: Operates in the frequency domain using Haar Wavelets. It is highly sensitive to "Edges" (text lines). Since the text is different, the edge frequencies differ.
@@ -51,12 +57,13 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 | ![BoxA](box_problem/Screenshot%20from%202026-01-23%2012-35-51.png) | ![BoxB](box_problem/Screenshot%20from%202026-01-23%2012-35-59.png) |
 
 ### Model Analysis
-1.  **CLIP**: **FAIL**. The semantic semantic content is identical. CLIP has no notion of "Coordinates" or "Pixels".
-2.  **DINOv2**: **FAIL**. The patch embeddings will be nearly identical because the visual content within the crops is 99% the same.
+1.  **CLIP**: **FAIL (Significant Similarity)**. CLIP focuses on the object class ("Box") and often treats color as a secondary attribute. It computes a high similarity score, effectively ignoring the color difference (Red vs Green/Blue).
+2.  **DINOv2**: **FAIL (Significant Similarity)**. Similar to CLIP, DINO's patch embeddings prioritize the structural identity of the object. It sees "a box" in both crops and produces highly correlated embeddings, failing to distinguish the color variation.
 
 ### Suggested Technique
 *   **IoU (Intersection over Union)**: Calculate the overlap between the two boxes. If IoU > 0.95, merge them.
 *   **Perceptual Hashing (pHash)**: returns a difference of **0** for these images, confirming they are visually duplicate enough to be merged.
+
 
 ---
 
@@ -64,12 +71,12 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 This section validates the algorithms using the control set.
 
 ## Validation Data
-| Reference Image | Target Image | Control Image |
+| | | |
 | :---: | :---: | :---: |
 | ![Ref](hash_test_person.png) | ![Target](hist_test_person.png) | ![Control](hash_test_dice.png) |
 
 ## Histogram Analysis
-| Ref Histogram | Target Histogram | Control Histogram |
+| | | |
 | :---: | :---: | :---: |
 | ![Hist Ref](hist_plot_hash_test_person.png) | ![Hist Target](hist_plot_hist_test_person.png) | ![Hist Control](hist_plot_hash_test_dice.png) |
 
