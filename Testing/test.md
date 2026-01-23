@@ -12,7 +12,7 @@ The subdirectories contain "Edge Cases" that expose the architectural biases of 
 
 | | | |
 | :---: | :---: | :---: |
-| ![Ref](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-27-54.pnghttps://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-27-54.png) | ![Target]([car_flip/target.png](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-28-17.png)) | ![Context]([car_flip/screenshot.png](https://github.com/gaurav337/DejaView/blob/main/Testing/car_flip_test/Screenshot%20from%202026-01-23%2012-28-41.png)) |
+| ![Ref](car_flip_test/Screenshot%20from%202026-01-23%2012-27-54.png) | ![Target](car_flip_test/Screenshot%20from%202026-01-23%2012-28-17.png)) | ![Context](car_flip_test/Screenshot%20from%202026-01-23%2012-28-41.png)) |
 
 ### Model Analysis### Model Analysis
 
@@ -36,7 +36,7 @@ The similarity scores are surprisingly low for a simple geometric transformation
 
 | | | |
 | :---: | :---: | :---: |
-| ![ImgA](desc_mismatch/img_a.png) | ![ImgB](desc_mismatch/img_b.png) | ![Context](desc_mismatch/screenshot.png) |
+| ![ImgA](desc_mismatch/Screenshot%20from%202026-01-23%2012-38-44.png) | ![ImgB](desc_mismatch/Screenshot%20from%202026-01-23%2012-38-53.png) | ![Context](desc_mismatch/Screenshot%20from%202026-01-23%2012-38-53.png)) |
 
 ### Model Analysis
 1.  **CLIP**: **FAIL (Significant Match)**. CLIP demonstrates strong concept matching (like matching "text apple" to "picture apple"). Since the visual concept ("Software Interface") is the same, it ignores the specific character differences, resulting in a high similarity score.
@@ -54,7 +54,7 @@ The similarity scores are surprisingly low for a simple geometric transformation
 
 | Box A | Box B |
 | :---: | :---: |
-| ![BoxA](box_problem/Screenshot%20from%202026-01-23%2012-35-51.png) | ![BoxB](box_problem/Screenshot%20from%202026-01-23%2012-35-59.png) |
+| ![BoxA](box_test/Screenshot%20from%202026-01-23%2012-35-51.png) | ![BoxB](box_test/Screenshot%20from%202026-01-23%2012-35-59.png)) |
 
 ### Model Analysis
 1.  **CLIP**: **FAIL (Significant Similarity)**. CLIP focuses on the object class ("Box") and often treats color as a secondary attribute. It computes a high similarity score, effectively ignoring the color difference (Red vs Green/Blue).
@@ -78,7 +78,7 @@ This section validates the algorithms using the control set.
 ## Histogram Analysis
 | | | |
 | :---: | :---: | :---: |
-| ![Hist Ref](hist_plot_hash_test_person.png) | ![Hist Target](hist_plot_hist_test_person.png) | ![Hist Control](hist_plot_hash_test_dice.png) |
+| ![Hist Ref](download.png)) | ![Hist Target](hist_graph.png) | ![Hist Control](hist_test_person.png) |
 
 ## Technical Validation
 
