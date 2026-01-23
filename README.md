@@ -1,30 +1,44 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/CLIP-OpenAI-green?logo=openai&logoColor=white" alt="CLIP">
-  <img src="https://img.shields.io/badge/FAISS-Facebook-orange?logo=facebook&logoColor=white" alt="FAISS">
-  <img src="https://img.shields.io/badge/Streamlit-UI-red?logo=streamlit&logoColor=white" alt="Streamlit">
+  <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch">
+  <img src="https://img.shields.io/badge/CLIP-OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="CLIP">
+  <img src="https://img.shields.io/badge/DINOv2-Meta-0467DF?style=for-the-badge&logo=meta&logoColor=white" alt="DINOv2">
+  <img src="https://img.shields.io/badge/FAISS-Facebook-4267B2?style=for-the-badge&logo=facebook&logoColor=white" alt="FAISS">
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
 </p>
 
-# 🔮 DejaView — Near-Duplicate Image Detection (NDID)
+<h1 align="center">🔮 DejaView</h1>
+<h3 align="center">Near-Duplicate Image Detection System</h3>
 
-> *"Maya represents the veil of illusion where one truth can take a thousand different forms."*
+<p align="center">
+  <i>"Maya represents the veil of illusion where one truth can take a thousand different forms."</i>
+</p>
 
-**DejaView** is a high-performance Near-Duplicate Image Detection system that acts like the **Sudarshana Chakra**—a tool of ultimate discernment that cuts through the illusions of editing and compression to identify the original "soul" (the source image) within a vast sea of data.
+<p align="center">
+  <b>DejaView</b> is a high-performance Near-Duplicate Image Detection system that acts like the <b>Sudarshana Chakra</b>—a tool of ultimate discernment that cuts through the illusions of editing and compression to identify the original "soul" (the source image) within a vast sea of data.
+</p>
 
 ---
 
 ## 📋 Table of Contents
 
-- [Problem Statement](#-problem-statement)
-- [Solution Overview](#-solution-overview)
-- [System Architecture](#-system-architecture)
-- [Pipeline Workflow](#-pipeline-workflow)
-- [Project Structure](#-project-structure)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Technical Details](#-technical-details)
-- [Evaluation Metrics](#-evaluation-metrics)
-- [Datasets](#-datasets)
+<details>
+<summary>Click to expand</summary>
+
+- [🎯 Problem Statement](#-problem-statement)
+- [💡 Solution Overview](#-solution-overview)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🔄 Pipeline Workflow](#-pipeline-workflow)
+- [📁 Project Structure](#-project-structure)
+- [🗂️ Directory Deep Dive](#️-directory-deep-dive)
+- [🛠️ Installation](#️-installation)
+- [🚀 Usage](#-usage)
+- [🔬 Technical Details](#-technical-details)
+- [📊 Evaluation Metrics](#-evaluation-metrics)
+- [📚 Datasets](#-datasets)
+- [🎬 Demo](#-demo)
+
+</details>
 
 ---
 
@@ -32,76 +46,37 @@
 
 In modern digital platforms such as **social media**, **e-commerce**, **content hosting**, and **news aggregation systems**, millions of images are uploaded every day. A significant portion of these uploads are **duplicate or near-duplicate images**—the same image uploaded multiple times or slightly modified versions of an existing image.
 
-### Challenges
+### 🚧 The Challenge
 
 Traditional systems struggle to automatically detect these duplicates when images are:
 
-| Transformation | Description |
-|----------------|-------------|
-| 🔄 **Resized** | Scaled up or down |
-| ✂️ **Cropped** | Portions removed |
-| 📦 **Compressed** | Quality reduced (JPEG artifacts) |
-| 🎨 **Color-adjusted** | Brightness, contrast, saturation changes |
-| 💧 **Watermarked** | Text or logos overlaid |
-| 🖼️ **Slightly edited** | Minor retouching or filters |
+<table>
+<tr>
+<td align="center">🔄<br><b>Resized</b></td>
+<td align="center">✂️<br><b>Cropped</b></td>
+<td align="center">📦<br><b>Compressed</b></td>
+<td align="center">🎨<br><b>Color-adjusted</b></td>
+<td align="center">💧<br><b>Watermarked</b></td>
+<td align="center">🖼️<br><b>Slightly edited</b></td>
+</tr>
+<tr>
+<td>Scaled up/down</td>
+<td>Portions removed</td>
+<td>JPEG artifacts</td>
+<td>Brightness, contrast</td>
+<td>Text/logos overlaid</td>
+<td>Filters applied</td>
+</tr>
+</table>
 
-### 🖼️ Transformation Examples
-
-DejaView can detect duplicates across all these transformations:
-
-#### 🔄 Resized (Scaled up or down)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/resized.jpeg) | ✅ Detected |
-
----
-
-#### ✂️ Cropped (Portions removed)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/cropped.jpeg) | ✅ Detected |
-
-
----
-
-#### 📦 Compressed (Quality reduced - JPEG artifacts)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/compressed.jpeg) | ✅ Detected |
-
-
----
-
-#### 🎨 Color-adjusted (Brightness, contrast, saturation changes)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/color.jpeg)| ✅ Detected |
-
-
----
-
-#### 💧 Watermarked (Text or logos overlaid)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/watermark.jpeg) | ✅ Detected |
-
-
----
-
-#### 🖼️ Slightly edited (Minor retouching or filters)
-| Original | Detection |
-|:--------:|:---------:|
-| ![Original](assets/examples/edited.jpeg) | ✅ Detected |
-
----
-
-### Why It Matters
+###  Why It Matters
 
 | Use Case | Benefit |
 |----------|---------|
-| **Storage Optimization** | Eliminating redundant copies to save petabytes of cloud storage |
-| **Spam & Integrity** | Preventing "repost bots" from flooding feeds and protecting original creators from copyright infringement |
-| **Search Relevance** | Ensuring a news aggregator doesn't show the same thumbnail ten times for one story |
+| **🗄️ Storage Optimization** | Eliminating redundant copies to save petabytes of cloud storage |
+| **🛡️ Spam & Integrity** | Preventing "repost bots" from flooding feeds and protecting original creators |
+| **🔍 Search Relevance** | Ensuring a news aggregator doesn't show the same thumbnail ten times |
+| **⚖️ Copyright Protection** | Identifying unauthorized use of copyrighted images |
 
 ---
 
@@ -109,26 +84,25 @@ DejaView can detect duplicates across all these transformations:
 
 DejaView implements a **multi-layered detection pipeline** that combines:
 
-
-1. **Structure Check** — Early rejection of featureless images.
-2. **Perceptual Hashing (pHash)** — Fast structural fingerprinting.
-3. **Wavelet Hashing (wHash)** — Frequency-domain analysis for robustness.
-4. **Visual Verification** — Histogram & Feature matching (ORB) to confirm matches.
-5. **CLIP Embeddings** — Deep semantic understanding via vision transformers.
-
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DejaView Pipeline                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Input Image ──► pHash Check ──► wHash Check ──► CLIP Check    │
-│                        │              │              │          │
-│                        ▼              ▼              ▼          │
-│                   [Duplicate]    [Similar]      [Similar]       │
-│                    (Fast)        (Medium)       (Semantic)      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           🔮 DejaView Detection Pipeline                            │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  📥 Input ──► 🎯 Feature Check ──► � Hash Check ──► � DINO ──► 📎 CLIP ──► ✅ Out │
+│                    │ (ORB)              │              │           │                │
+│                    ▼                    ▼              ▼           ▼                │
+│               [Rejected]           [Similar]       [Similar]   [Similar/Unique]     │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+| Stage | Method | Speed | Use Case |
+|-------|--------|-------|----------|
+| **1️⃣ Structure Check** | ORB Keypoints | ⚡ Fast | Early rejection of featureless images (< 20 features) |
+| **2️⃣ Hash Matching** | pHash + wHash | ⚡ Fast | Fast fingerprinting with augmentation support |
+| **3️⃣ DINO Check** | DINOv2 Embeddings | � Thorough | Structural similarity detection |
+| **4️⃣ CLIP Check** | CLIP Embeddings | 🐢 Thorough | Semantic similarity detection |
 
 ---
 
@@ -137,21 +111,26 @@ DejaView implements a **multi-layered detection pipeline** that combines:
 ```mermaid
 flowchart TB
     subgraph Input["📥 Input Layer"]
-        UI[Streamlit UI]
-        API[ndid_model.py]
+        UI[🖥️ Streamlit UI]
+        API[📦 ndid_model.py]
     end
 
     subgraph Core["⚙️ Core Processing"]
-        DC[duplicate_checker.py]
+        DC[🔧 duplicate_checker.py]
         
-        subgraph Hashing["🔐 Perceptual Hashing (Linear)"]
-            direction TB
-            PH[pHash Check]
-            WH[wHash Check]
+        subgraph FeatureCheck["🎯 Feature Check"]
+            ORB[ORB Keypoints ≥ 20]
         end
         
-        subgraph Semantic["🧠 Semantic Analysis"]
-            CLIP[CLIP Embedding]
+        subgraph Hashing["🔐 Hashing Layer"]
+            direction TB
+            PH[📊 pHash Check]
+            WH[🌊 wHash Check]
+        end
+        
+        subgraph Deep["🧠 Deep Learning"]
+            DINO[🦕 DINOv2]
+            CLIP[📎 CLIP]
         end
     end
 
@@ -159,44 +138,50 @@ flowchart TB
         subgraph FAISS["FAISS Indices"]
             PI[(phash.index)]
             WI[(whash.index)]
-            CI[(clip_index.index)]
+            CI[(clip.index)]
+            DI[(dino.index)]
         end
         
-        subgraph Paths["Image Mappings"]
-            HP[image_paths.npy]
-            CP[clip_image_paths.npy]
+        subgraph Paths["📍 Image Mappings"]
+            HP[phash_paths.npy]
+            CP[clip_paths.npy]
+            DP[dino_paths.npy]
         end
     end
 
     subgraph Models["🤖 AI Models"]
         ModelCheck{Local Available?}
-        LM[Local CLIP Model]
-        OM[OpenAI CLIP ViT-B/32]
+        Local[💾 Local Models]
+        Online[🌐 HuggingFace]
     end
 
     %% Flow Connections
     UI --> API
     API --> DC
     
-    %% Linear Processing Flow
-    DC --> PH
+    %% Processing Flow
+    DC --> ORB
+    ORB --> PH
     PH --> WH
-    WH --> CLIP
+    WH --> DINO
+    DINO --> CLIP
     
     %% Storage Lookups
     PH <--> PI
     WH <--> WI
+    DINO <--> DI
     CLIP <--> CI
     
     %% Path Retrievals
     PI --> HP
-    WI --> HP
     CI --> CP
+    DI --> DP
     
-    %% Model Loading Logic
+    %% Model Loading
     CLIP --> ModelCheck
-    ModelCheck -->|Yes| LM
-    ModelCheck -->|No / Fallback| OM
+    DINO --> ModelCheck
+    ModelCheck -->|Yes| Local
+    ModelCheck -->|No| Online
 ```
 
 ---
@@ -207,77 +192,52 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph Preprocessing
-        A[Raw Images] --> B[Image Validation]
-        B --> C[EXIF Transpose]
-        C --> D[RGB Conversion]
-        D --> E[Preprocessed Images]
+    subgraph Preprocessing["📥 Preprocessing"]
+        A[🖼️ Raw Images] --> B[✅ Image Validation]
+        B --> C[🔄 EXIF Transpose]
+        C --> D[🎨 RGB Conversion]
+        D --> E[✨ Preprocessed Images]
     end
     
-    subgraph Hashing
-        E --> F[Compute pHash]
-        E --> G[Compute wHash]
-        F --> H[Binary FAISS Index]
-        G --> I[Binary FAISS Index]
+    subgraph Augmentation["� Augmentation"]
+        E --> AUG[Generate 7 Variants]
+        AUG --> |Original, Rotate 90/180/270, Flip H/V/Both| F[📊 Hash Each Variant]
     end
     
-    subgraph CLIP_Indexing
-        E --> J[CLIP Embedding]
-        J --> K[L2 Normalize]
-        K --> L[Inner Product Index]
+    subgraph Hashing["🔐 Hash Generation"]
+        F --> G[pHash Vectors]
+        F --> H[wHash Vectors]
+        G --> I[📁 Binary FAISS Index]
+        H --> J[📁 Binary FAISS Index]
     end
     
-    H --> M[(phash.index)]
-    I --> N[(whash.index)]
-    L --> O[(clip_index.index)]
+    subgraph Embedding["🧠 Deep Embeddings"]
+        E --> K[📎 CLIP Embedding]
+        E --> L[🦕 DINO Embedding]
+        K --> M[📐 L2 Normalize]
+        L --> N[📐 L2 Normalize]
+        M --> O[📁 Inner Product Index]
+        N --> P[📁 Inner Product Index]
+    end
 ```
 
 ### Phase 2: Query & Detection (Online)
 
 ```mermaid
 flowchart TD
-    A[Upload Image] --> SC{Structure Check?}
-    SC -->|Keypoints < 10| R[❌ REJECTED - Featureless]
-    SC -->|Pass| B{pHash Match?}
+    A[📤 Upload Image] --> SC{🎯 Feature Check}
+    SC -->|ORB < 20| R[🚫 REJECTED]
+    SC -->|ORB ≥ 20| B{📊 pHash + wHash}
     
-    B -->|Distance ≤ 4| V1{Visual Verify?}
-    V1 -->|Score ≥ 0.60| C[✅ DUPLICATE - pHash Verified]
-    V1 -->|Fail| D
-    B -->|No| D{wHash Match?}
+    B -->|Both > 92%| D1[✅ SIMILAR - Hash Match]
+    B -->|No Match| DL{🦕 DINO Check}
     
-    D -->|Distance ≤ 4| V2{Visual Verify?}
-    V2 -->|Score ≥ 0.60| E[✅ SIMILAR - wHash Verified]
+    DL -->|Score ≥ 82%| D2[✅ SIMILAR - DINO]
+    DL -->|Score < 50%| U[❌ UNIQUE]
+    DL -->|50% ≤ Score < 82%| CL{� CLIP Check}
     
-    %% FIX: Connect to the 'Check' node inside the subgraph, not the subgraph itself
-    V2 -->|Fail| Check
-    D -->|No| Check
-    
-    subgraph LoadModels["🤖 Model Loading"]
-        direction TB
-        Check{Local Model?}
-        Local[Load Local CLIP]
-        Online[Load OpenAI CLIP]
-        
-        Check -->|Available| Local
-        Check -->|Missing| Online
-    end
-
-    %% FIX: Connect from the nodes inside the subgraph to F
-    Local --> F{CLIP Match?}
-    Online --> F
-    
-    F -->|Score ≥ 0.85| V3{Visual Verify?}
-    V3 -->|Score ≥ 0.60| G[✅ SIMILAR - CLIP Verified]
-    V3 -->|Fail| H
-    F -->|No| H[❌ UNIQUE]
-    
-    C --> I[Return Result]
-    E --> I
-    G --> I
-    H --> I
-    R --> I
-    
-    I --> J[Display in UI]
+    CL -->|Score ≥ 69%| D3[✅ SIMILAR - CLIP]
+    CL -->|Score < 69%| U
 ```
 
 ---
@@ -287,56 +247,174 @@ flowchart TD
 ```
 DejaView/
 │
-├── 📄 streamlitUI.py          # Web interface for image upload & results
-├── 📄 ndid_model.py           # Bridge between UI and detection pipeline
-├── 📄 duplicate_checker.py    # Core detection logic with 3-stage pipeline
-├── 📄 add_to_database.py      # Script to incrementally add images to indices
-├── 📄 index_manager.py        # Functional logic for managing FAISS shards & indices
+├── 🎯 Core Detection Engine
+│   ├── 📄 streamlitUI.py          # Web interface for image upload & results (76 lines)
+│   ├── 📄 ndid_model.py           # Bridge between UI and detection pipeline (59 lines)
+│   ├── 📄 duplicate_checker.py    # Core detection logic with 4-stage pipeline (326 lines)
+│   └── 📄 index_manager.py        # Manages FAISS shards & indices (201 lines)
 │
-├── 📄 Final_preprocessing_hashing.py  # Image preprocessing & hash generation
-├── 📄 Faiss_implementation.py         # FAISS index creation for hashes
-├── 📄 clip_train.py                   # CLIP embedding & indexing
-├── 📄 download_model.py               # Download CLIP model for local use
+├── 🔧 Processing & Training
+│   ├── 📄 Final_preprocessing_hashing.py  # Image preprocessing & augmented hash generation (183 lines)
+│   ├── 📄 Faiss_implementation.py         # FAISS binary index creation utilities (79 lines)
+│   ├── 📄 clip_train.py                   # CLIP embedding logic (75 lines)
+│   ├── 📄 dino_train.py                   # DINOv2 embedding logic (92 lines)
+│   ├── 📄 download_model.py               # Interactive model downloader (64 lines)
+│   └── 📄 download_official_dino.py       # Direct DINOv2 downloader (33 lines)
 │
-├── 📂 final_hist/             # Visual Verification Logic
-│   └── 📄 hist_matching.py    # Histogram & ORB Feature matching
+├── 🔧 Maintenance Scripts
+│   ├── 📄 add_to_database.py      # Batch add images to indices (47 lines)
+│   ├── 📄 all_images.py           # Full directory indexing with all methods (100 lines)
+│   ├── 📄 remove_from_index.py    # Remove specified images from indices (143 lines)
+│   ├── 📄 inspect_paths.py        # Debug utility for path inspection (29 lines)
+│   └── 📄 test_checker.py         # Quick test script for pipeline (25 lines)
 │
-├── 📂 metrics/                # Evaluation Tools
-│   ├── 📄 create_evaluation_data.py
-│   ├── 📄 add_non_matching.py
-│   ├── 📄 combine_ground_truth.py
-│   └── 📄 evaluate.py
+├── 📂 models/                      # 🤖 Local Model Weights (~950MB)
+│   ├── 📂 clipViTb32/             # CLIP ViT-B/32 (605MB)
+│   └── 📂 dinoV2b14reg/           # DINOv2 Base w/ Registers (346MB)
 │
-├── 📄 phash.index             # FAISS binary index for perceptual hashes
-├── 📄 whash.index             # FAISS binary index for wavelet hashes
-├── 📄 image_paths.npy         # Image path mappings for hash indices
+├── 📂 index/                       # 💾 Vector Search Indices
+│   ├── 📄 phash_*.index           # Perceptual Hash Shards
+│   ├── 📄 whash_*.index           # Wavelet Hash Shards
+│   ├── 📄 clip_*.index            # CLIP Embedding Shards
+│   ├── 📄 dino_*.index            # DINO Embedding Shards
+│   └── 📄 *_paths.npy             # Path mappings
 │
-├── 📂 CLIP/
-│   ├── clip_index.index       # FAISS index for CLIP embeddings
-│   ├── clip_image_paths.npy   # Image path mappings for CLIP
-│   └── clip_embeddings.npy    # Stored CLIP embeddings
+├── 📂 final_hist/                  # 👁️ Histogram Matching (Currently Unused)
+│   └── 📄 hist_matching.py        # Histogram & ORB matching - imported but not active (179 lines)
 │
-├── 📂 local_clip_model/       # Cached CLIP model (ViT-B/32)
-├── 📂 images/                 # Dataset images
+├── 📂 metrics/                     # 📊 Evaluation Suite
+│   ├── 📄 create_evaluation_data.py   # Generates transformed test images
+│   ├── 📄 add_non_matching.py         # Creates synthetic non-matching images
+│   ├── 📄 combine_ground_truth.py     # Merges positive/negative ground truth CSVs
+│   ├── 📄 evaluate.py                 # Runs full evaluation with F1/Precision/Recall (159 lines)
+│   └── 📂 evaluation/                 # Test data & results
 │
-└── 📄 requirements.txt        # Python dependencies
+├── 📂 CLIP/                        # 📎 Legacy CLIP indices (from older version)
+├── 📂 assets/                      # 🎨 Documentation assets
+├── 📂 images/                      # 🖼️ Dataset images
+│   └── 📂 uploads/                # New unique images stored here
+│
+├── 📂 index_backup/                # 💾 Index backups
+│
+└── 📄 requirements.txt             # Dependencies
 ```
 
-### Module Descriptions
+---
 
-| Module | Purpose |
+## 🗂️ Directory Deep Dive
+
+<details>
+<summary><b>📂 models/</b> — AI Model Weights</summary>
+
+| Directory | Model | Size | Description |
+|-----------|-------|------|-------------|
+| `clipViTb32/` | CLIP ViT-B/32 | 605MB | OpenAI's vision-language model for semantic understanding |
+| `dinoV2b14reg/` | DINOv2 Base | 346MB | Meta's self-supervised vision model with registers |
+
+**Files in `clipViTb32/`:**
+- `model.safetensors` — Model weights
+- `config.json` — Model configuration
+- `tokenizer.json` — Text tokenizer
+- `preprocessor_config.json` — Image preprocessing config
+
+**Files in `dinoV2b14reg/`:**
+- `model.safetensors` — Model weights
+- `config.json` — Model configuration
+- `preprocessor_config.json` — Image preprocessing config
+
+</details>
+
+<details>
+<summary><b>📂 index/</b> — FAISS Vector Indices</summary>
+
+| File Pattern | Type | Description |
+|--------------|------|-------------|
+| `phash_*.index` | Binary Flat | Perceptual hash indices (Hamming distance) |
+| `whash_*.index` | Binary Flat | Wavelet hash indices (Hamming distance) |
+| `clip_*.index` | Flat IP | CLIP embedding indices (Inner Product) |
+| `dino_*.index` | Flat IP | DINO embedding indices (Inner Product) |
+| `*_paths.npy` | NumPy Array | Image path mappings for each index type |
+
+**Index Features:**
+- 📁 **Shard Limit:** 1,000,000 vectors per shard (auto-rotates)
+- � **Augmentation:** Each image generates 7 hash variants (original + rotations + flips)
+
+</details>
+
+<details>
+<summary><b>📂 final_hist/</b> — Histogram Matching (Currently Unused)</summary>
+
+| File | Purpose |
+|------|---------|
+| `hist_matching.py` | Multi-factor image comparison using Histogram + ORB |
+
+**Note:** This module is imported but **NOT actively used** in the pipeline. The `hist_match` verification code is commented out in `duplicate_checker.py`.
+
+**Available Functions (for future use):**
+- `hist_match()` — Main entry point for verification
+- `get_orb_score()` — ORB feature matching
+- `get_histogram_score()` — Color/structure histogram comparison
+- `get_feature_count()` — **ACTIVE** - Used for structure check (rejects images with < 20 ORB features)
+
+**Weights (if enabled):**
+```python
+{
+    'structure': 0.42,  # Grayscale histogram
+    'spatial':   0.43,  # ORB keypoint matches
+    'color':     0.15   # HSV histogram
+}
+```
+
+</details>
+
+<details>
+<summary><b>📂 metrics/</b> — Evaluation Suite</summary>
+
+| Script | Purpose |
 |--------|---------|
-| `streamlitUI.py` | Interactive web UI for uploading images and viewing detection results |
-| `ndid_model.py` | Handles file upload, creates temp files, and invokes the detection pipeline |
-| `duplicate_checker.py` | Main orchestrator: runs structure check, pHash/wHash/CLIP checks, and visual verification |
-| `index_manager.py` | Manages loading, searching, and saving of FAISS indices and shards |
-| `add_to_database.py` | Scans `images/` folder and adds new images to all indices (incremental update) |
-| `final_hist/hist_matching.py` | Implements Histogram comparison and ORB feature detection for verification |
-| `Final_preprocessing_hashing.py` | Image preprocessing (EXIF, RGB) and perceptual/wavelet hash computation |
-| `Faiss_implementation.py` | Builds FAISS binary indices from hash values |
-| `clip_train.py` | Generates CLIP embeddings and builds semantic search index |
-| `download_model.py` | Downloads and caches OpenAI CLIP model locally |
-| `metrics/*.py` | Suite of scripts for generating test data and calculating F1/Precision/Recall scores |
+| `create_evaluation_data.py` | Generates transformed test images (resize, crop, etc.) |
+| `add_non_matching.py` | Creates synthetic non-matching images |
+| `combine_ground_truth.py` | Merges positive/negative ground truth CSVs |
+| `evaluate.py` | Runs full evaluation and calculates F1/Precision/Recall |
+
+**Output Files in `evaluation/`:**
+- `ground_truth.csv` — Combined ground truth
+- `detailed_results.csv` — Per-image results with TP/TN/FP/FN status
+
+</details>
+
+---
+
+## 🧩 Module Descriptions
+
+### Core Modules
+
+| Module | Lines | Purpose |
+|--------|-------|---------|
+| `duplicate_checker.py` | 326 | 🔧 **Main Engine**: Coordinates the 4-stage detection pipeline |
+| `index_manager.py` | 201 | 💾 **Shard Manager**: Handles FAISS index loading, saving, searching, and auto-rotation |
+| `ndid_model.py` | 59 | 🔗 **Bridge**: Handles file upload, invokes detection, saves unique images to uploads/ |
+| `streamlitUI.py` | 76 | 🖥️ **UI**: Interactive web interface with side-by-side comparison |
+
+### Supporting Modules
+
+| Module | Lines | Purpose |
+|--------|-------|---------|
+| `clip_train.py` | 75 | 📎 CLIP embedding generation with local/online fallback |
+| `dino_train.py` | 92 | 🦕 DINOv2 embedding generation with local/online fallback |
+| `Final_preprocessing_hashing.py` | 183 | 🔐 pHash/wHash computation with 7-variant augmentation |
+| `Faiss_implementation.py` | 79 | 📁 FAISS binary index creation and hash-to-vector conversion |
+| `hist_matching.py` | 179 | 👁️ Histogram + ORB verification (currently unused in pipeline) |
+
+### Utility Scripts
+
+| Script | Lines | Purpose |
+|--------|-------|---------|
+| `add_to_database.py` | 47 | Batch add images from `images/` folder to all indices |
+| `all_images.py` | 100 | Full directory scan with augmented hashes + deep embeddings |
+| `remove_from_index.py` | 143 | Remove specified images from indices with backup |
+| `download_model.py` | 64 | Interactive download for CLIP and/or DINO models |
+| `test_checker.py` | 25 | Quick test with koala.png test image |
 
 ---
 
@@ -346,8 +424,9 @@ DejaView/
 
 - Python 3.8+
 - pip or conda
+- ~2GB disk space for models
 
-### Steps
+### Quick Start
 
 ```bash
 # 1. Clone the repository
@@ -363,7 +442,7 @@ source venv/bin/activate  # Linux/Mac
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Download CLIP model (one-time)
+# 4. Download models (one-time)
 python download_model.py
 ```
 
@@ -374,29 +453,29 @@ imagehash        # Perceptual & wavelet hashing
 faiss-cpu        # Vector similarity search
 numpy            # Numerical operations
 Pillow           # Image processing
-transformers     # CLIP model loading
+transformers     # CLIP & DINO model loading
 torch            # Deep learning backend
 streamlit        # Web UI framework
-opencv-python    # Computer Vision (histograms, ORB)
+opencv-python    # Computer Vision (ORB feature detection)
 ```
 
 ---
 
 ## 🚀 Usage
 
-### Running the Web Interface
+### 🖥️ Web Interface
 
 ```bash
 streamlit run streamlitUI.py
 ```
 
-This will launch a local web server (typically at `http://localhost:8501`) where you can:
+This launches a local web server (typically at `http://localhost:8501`) where you can:
 
-1. **Upload an image** (JPG, PNG, BMP supported)
-2. **Click "Run NDID"** to analyze
-3. **View results**: Status, similarity percentage, method used, and matched image
+1. **📤 Upload an image** (JPG, PNG, BMP, WEBP supported)
+2. **🔍 Click "Run NDID"** to analyze
+3. **📊 View results**: Status, similarity percentage, method used, and matched image
 
-### Programmatic Usage
+### 💻 Programmatic Usage
 
 ```python
 from duplicate_checker import check_image_pipeline
@@ -405,86 +484,154 @@ result = check_image_pipeline("path/to/your/image.jpg")
 
 print(result)
 # {
-#     "status": "Similar",           # Unique | Similar | Duplicate
+#     "status": "Similar",           # Unique | Similar | Rejected
 #     "similarity_percentage": 87.5,
 #     "matched_image_path": "/path/to/matched_image.png",
 #     "source_image_path": "path/to/your/image.jpg",
-#     "method": "clip"               # phash | whash | clip
-#     "method": "clip"               # phash | whash | clip
+#     "method": "DINO"               # phash & whash | DINO | CLIP | insufficient_features
 # }
 ```
 
-### 🛠️ Maintenance
-
-To add new images to the database without rebuilding the entire index:
+### 🔧 Maintenance Commands
 
 ```bash
+# Add all images from images/ folder to database
 python add_to_database.py
-```
 
-This script will:
-1. Scan the `images/` directory.
-2. Identify images that are not yet indexed.
-3. Compute hashes and embeddings for new images.
-4. Update the FAISS indices incrementally.
+# Full indexing with augmentation (recommended for initial setup)
+python all_images.py
+
+# Remove specific images from indices
+# (Edit REMOVE_PATHS list in the script first)
+python remove_from_index.py
+
+# Quick pipeline test
+python test_checker.py
+```
 
 ---
 
 ## 🔬 Technical Details
 
-### Detection Thresholds
+### 🎛️ Detection Thresholds
 
 | Method | Threshold | Metric | Description |
 |--------|-----------|--------|-------------|
-| **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
-| **CLIP** | ≥ 0.85 | Cosine Similarity | 512-dim embeddings, inner product |
-| **Visual Verify** | ≥ 0.60 | Histogram & ORB Score | Combined color/structure/spatial score |
-| **Structure** | ≥ 10 | ORB Keypoints | Minimum feature count to process image |
+| **Structure Check** | ≥ 20 | ORB Keypoints | Minimum feature count to proceed |
+| **pHash + wHash** | Both > 92% | Similarity % | Match if both hashes agree strongly |
+| **pHash/wHash** | ≤ 4 bits | Hamming Distance | Individual hash match threshold |
+| **DINO** | ≥ 0.82 | Cosine Similarity | Structural similarity check |
+| **CLIP** | ≥ 0.69 | Cosine Similarity | Semantic similarity check |
 
-### Why This Order?
+### 🔄 Image Augmentation for Indexing
 
+Each image is indexed with **7 variants** to handle rotations and flips:
+
+```python
+{
+    "original": img,
+    "rotate_90": img.rotate(270, expand=True),
+    "rotate_180": img.rotate(180, expand=True),
+    "rotate_270": img.rotate(90, expand=True),
+    "flip_horizontal": img.transpose(FLIP_LEFT_RIGHT),
+    "flip_vertical": img.transpose(FLIP_TOP_BOTTOM),
+    "flip_both": img.transpose(FLIP_TOP_BOTTOM).transpose(FLIP_LEFT_RIGHT),
+}
 ```
-pHash (Fastest)  →  wHash (Fast)  →  CLIP (Slowest but Smartest)
-     │                  │                    │
-     ▼                  ▼                    ▼
- ~0.1ms/img         ~0.2ms/img           ~50ms/img
-```
 
-1. **pHash first**: Catches exact/near-exact duplicates instantly
-2. **wHash second**: Catches slight geometric transformations
-3. **CLIP last**: Semantic understanding for edited/filtered images
+### 🧠 Model Specifications
 
-### CLIP Model
+<table>
+<tr>
+<th>Model</th>
+<th>CLIP ViT-B/32</th>
+<th>DINOv2 Base</th>
+</tr>
+<tr>
+<td><b>Architecture</b></td>
+<td>Vision Transformer</td>
+<td>Vision Transformer + Registers</td>
+</tr>
+<tr>
+<td><b>Embedding Dim</b></td>
+<td>512</td>
+<td>768</td>
+</tr>
+<tr>
+<td><b>Input Size</b></td>
+<td>224×224</td>
+<td>224×224</td>
+</tr>
+<tr>
+<td><b>Source</b></td>
+<td>OpenAI via HuggingFace</td>
+<td>Meta via HuggingFace</td>
+</tr>
+<tr>
+<td><b>Strength</b></td>
+<td>Semantic understanding</td>
+<td>Structural features</td>
+</tr>
+</table>
 
-- **Architecture**: ViT-B/32 (Vision Transformer, patch size 32)
-- **Embedding Dimension**: 512
-- **Source**: OpenAI CLIP via HuggingFace Transformers
-- **Local Caching**: Model cached in `local_clip_model/` for offline use
-
-### FAISS Index Types
+### 📁 FAISS Index Types
 
 | Index | Type | Use Case |
 |-------|------|----------|
-| `phash.index` | `IndexBinaryFlat` | Exact Hamming distance search |
-| `whash.index` | `IndexBinaryFlat` | Exact Hamming distance search |
-| `clip_index.index` | `IndexFlatIP` | Inner product (cosine) search |
+| `phash_*.index` | `IndexBinaryFlat` | Exact Hamming distance search |
+| `whash_*.index` | `IndexBinaryFlat` | Exact Hamming distance search |
+| `clip_*.index` | `IndexFlatIP` | Inner product (cosine) search |
+| `dino_*.index` | `IndexFlatIP` | Inner product (cosine) search |
+
+### 🔄 Pipeline Logic Summary
+
+```
+1. Structure Check: get_feature_count() ≥ 20 ORB features
+   └─ FAIL → Status: "Rejected", method: "insufficient_features"
+
+2. Hash Check: pHash AND wHash both > 92%
+   └─ PASS → Status: "Similar (pHash & wHash)"
+
+3. DINO Check: Score ≥ 82%
+   └─ PASS → Status: "Similar", method: "DINO"
+   └─ Score < 50% → Status: "Unique"
+
+4. CLIP Check: Score ≥ 69%
+   └─ PASS → Status: "Similar", method: "CLIP"
+   └─ FAIL → Status: "Unique"
+```
 
 ---
 
 ## 📊 Evaluation Metrics
 
-The system is evaluated using the **F1 Score**, which balances precision and recall:
+The system is evaluated using standard information retrieval metrics:
 
 ```
-F1 = 2 × (Precision × Recall) / (Precision + Recall)
+Precision = TP / (TP + FP)    — Of detected duplicates, how many are correct?
+Recall    = TP / (TP + FN)    — Of actual duplicates, how many did we find?
+F1 Score  = 2 × (P × R)/(P + R)   — Harmonic mean of precision and recall
 ```
 
-| Metric | Definition |
-|--------|------------|
-| **Precision** | Of all detected duplicates, how many are actually duplicates? |
-| **Recall** | Of all actual duplicates, how many did we detect? |
-| **F1 Score** | Harmonic mean of precision and recall |
+### 📈 Running Evaluation
+
+```bash
+# 1. Generate positive test cases (transformed images)
+python metrics/create_evaluation_data.py
+
+# 2. Generate negative test cases (unique images)
+python metrics/add_non_matching.py
+
+# 3. Combine ground truth data
+python metrics/combine_ground_truth.py
+
+# 4. Run evaluation
+python metrics/evaluate.py
+```
+
+**Output:**
+- Console: F1 Score, Confusion Matrix, Per-transform accuracy
+- File: `evaluation/detailed_results.csv`
 
 ---
 
@@ -496,36 +643,47 @@ F1 = 2 × (Precision × Recall) / (Precision + Recall)
 |---------|-------------|------|
 | **Google Landmarks V2** | 5M+ landmark images with near-duplicates | [GitHub](https://github.com/cvdfoundation/google-landmark) |
 | **INRIA Copydays** | Benchmark for copy detection with distortions | [INRIA](https://thoth.inrialpes.fr/~jegou/data.php.html#copydays) |
+| **DISC21 (Meta AI)** | Dataset released for the Image Similarity Challenge 2021 | [Github](https://github.com/facebookresearch/disc21) |
 
 ---
 
 ## 🏛️ Architecture Summary
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                              DejaView System                               │
-├────────────────────────────────────────────────────────────────────────────┤
-│                                                                            │
-│  ┌─────────────┐     ┌─────────────────────────────────────────────────┐  │
-│  │   Frontend  │     │              Backend Pipeline                    │  │
-│  │             │     │                                                  │  │
-│  │  Streamlit  │────▶│  ┌─────────┐   ┌─────────┐   ┌───────────────┐  │  │
-│  │     UI      │     │  │  pHash  │──▶│  wHash  │──▶│     CLIP      │  │  │
-│  │             │     │  │  Check  │   │  Check  │   │  Embeddings   │  │  │
-│  └─────────────┘     │  └────┬────┘   └────┬────┘   └───────┬───────┘  │  │
-│                      │       │             │                │          │  │
-│                      │       ▼             ▼                ▼          │  │
-│                      │  ┌─────────────────────────────────────────┐    │  │
-│                      │  │           FAISS Vector Store            │    │  │
-│                      │  │  ┌─────────┐ ┌─────────┐ ┌───────────┐  │    │  │
-│                      │  │  │ phash   │ │ whash   │ │   clip    │  │    │  │
-│                      │  │  │ .index  │ │ .index  │ │  .index   │  │    │  │
-│                      │  │  └─────────┘ └─────────┘ └───────────┘  │    │  │
-│                      │  └─────────────────────────────────────────┘    │  │
-│                      └─────────────────────────────────────────────────┘  │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                              🔮 DejaView System                                  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  ┌─────────────┐     ┌───────────────────────────────────────────────────────┐  │
+│  │   Frontend  │     │              Backend Pipeline                          │  │
+│  │             │     │                                                        │  │
+│  │  Streamlit  │────►│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌───────┐  │  │
+│  │     UI      │     │  │ Feature │──►│  Hash   │──►│  DINO   │──►│ CLIP  │  │  │
+│  │             │     │  │ Check   │   │ Check   │   │  Check  │   │ Check │  │  │
+│  └─────────────┘     │  └────┬────┘   └────┬────┘   └────┬────┘   └───┬───┘  │  │
+│                      │       │             │              │            │      │  │
+│                      │       ▼             ▼              ▼            ▼      │  │
+│                      │  ┌─────────────────────────────────────────────────┐   │  │
+│                      │  │              FAISS Vector Store                  │   │  │
+│                      │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐│   │  │
+│                      │  │  │ phash   │ │ whash   │ │  dino   │ │  clip   ││   │  │
+│                      │  │  │ .index  │ │ .index  │ │ .index  │ │ .index  ││   │  │
+│                      │  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘│   │  │
+│                      │  └─────────────────────────────────────────────────┘   │  │
+│                      └───────────────────────────────────────────────────────┘  │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🎬 Demo
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID">
+    <img src="https://img.shields.io/badge/YouTube-Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo on YouTube">
+  </a>
+</p>
 
 ---
 
@@ -541,64 +699,12 @@ This project is for educational purposes.
 
 ---
 
-## 🎬 Project Demo
-
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID">
-    <img src="https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo on YouTube">
-  </a>
-</p>
-
-▶️ **[Click here to watch the full project demonstration](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)**
-
-
----
-
-# Metrics & Evaluation
-
-This directory contains scripts to generate test data and evaluate the performance (F1 Score, Precision, Recall) of the Near-Duplicate Image Detection system.
-
-## Scripts
-
-### 1. `create_evaluation_data.py`
-Generates transformed versions of existing images (resize, crop, compress, color, watermark).
-- **Output**: `evaluation/test_images/should_match/`
-- **Generates**: `evaluation/ground_truth_matches.csv`
-
-### 2. `add_non_matching.py`
-Generates synthetic random images (noise, solid colors) that should NOT match any existing image.
-- **Output**: `evaluation/test_images/should_not_match/`
-- **Generates**: `evaluation/ground_truth_non_matches.csv`
-
-### 3. `combine_ground_truth.py`
-Combines the positive (matches) and negative (non-matches) ground truth files into one master file.
-- **Output**: `evaluation/ground_truth.csv`
-
-### 4. `evaluate.py`
-Runs the detection pipeline against the ground truth dataset and calculates metrics.
-- **Input**: `evaluation/ground_truth.csv`
-- **Output**: 
-    - Console Output: F1 Score, Confusion Matrix, Per-transform accuracy.
-    - File Output: `evaluation/detailed_results.csv`
-
-## How to Run
-
-Run the scripts in the following order from the project root (`d:\clipupdated\DejaView`):
-
-```bash
-# 1. Generate Positive Test Cases (Transformed Images)
-python metrics/create_evaluation_data.py
-
-# 2. Generate Negative Test Cases (Unique/Random Images)
-python metrics/add_non_matching.py
-
-# 3. Combine Ground Truth Data
-python metrics/combine_ground_truth.py
-
-# 4. Run Evaluation
-python metrics/evaluate.py
-```
-
 <p align="center">
   <i>"Through the veil of Maya, DejaView sees the truth."</i>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20with-Python-3776AB?style=flat&logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/Powered%20by-FAISS-4267B2?style=flat&logo=facebook&logoColor=white">
+  <img src="https://img.shields.io/badge/AI-CLIP%20%2B%20DINOv2-FF6F00?style=flat&logo=tensorflow&logoColor=white">
 </p>
