@@ -1,0 +1,625 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/CLIP-OpenAI-green?logo=openai&logoColor=white" alt="CLIP">
+  <img src="https://img.shields.io/badge/FAISS-Facebook-orange?logo=facebook&logoColor=white" alt="FAISS">
+  <img src="https://img.shields.io/badge/Streamlit-UI-red?logo=streamlit&logoColor=white" alt="Streamlit">
+</p>
+
+# 🔮 DejaView — Near-Duplicate Image Detection (NDID)
+
+> *"Maya represents the veil of illusion where one truth can take a thousand different forms."*
+
+**DejaView** is a high-performance Near-Duplicate Image Detection system that acts like the **Sudarshana Chakra**—a tool of ultimate discernment that cuts through the illusions of editing and compression to identify the original "soul" (the source image) within a vast sea of data.
+
+---
+
+## 📋 Table of Contents
+
+- [Problem Statement](#-problem-statement)
+- [Solution Overview](#-solution-overview)
+- [System Architecture](#-system-architecture)
+- [Pipeline Workflow](#-pipeline-workflow)
+- [Project Structure](#-project-structure)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Technical Details](#-technical-details)
+- [Evaluation Metrics](#-evaluation-metrics)
+- [Datasets](#-datasets)
+
+---
+
+## 🎯 Problem Statement
+
+In modern digital platforms such as **social media**, **e-commerce**, **content hosting**, and **news aggregation systems**, millions of images are uploaded every day. A significant portion of these uploads are **duplicate or near-duplicate images**—the same image uploaded multiple times or slightly modified versions of an existing image.
+
+### Challenges
+
+Traditional systems struggle to automatically detect these duplicates when images are:
+
+| Transformation | Description |
+|----------------|-------------|
+| 🔄 **Resized** | Scaled up or down |
+| ✂️ **Cropped** | Portions removed |
+| 📦 **Compressed** | Quality reduced (JPEG artifacts) |
+| 🎨 **Color-adjusted** | Brightness, contrast, saturation changes |
+| 💧 **Watermarked** | Text or logos overlaid |
+| 🖼️ **Slightly edited** | Minor retouching or filters |
+
+### 🖼️ Transformation Examples
+
+DejaView can detect duplicates across all these transformations:
+
+#### 🔄 Resized (Scaled up or down)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/resized.jpeg) | ✅ Detected |
+
+---
+
+#### ✂️ Cropped (Portions removed)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/cropped.jpeg) | ✅ Detected |
+
+
+---
+
+#### 📦 Compressed (Quality reduced - JPEG artifacts)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/compressed.jpeg) | ✅ Detected |
+
+
+---
+
+#### 🎨 Color-adjusted (Brightness, contrast, saturation changes)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/color.jpeg)| ✅ Detected |
+
+
+---
+
+#### 💧 Watermarked (Text or logos overlaid)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/watermark.jpeg) | ✅ Detected |
+
+
+---
+
+#### 🖼️ Slightly edited (Minor retouching or filters)
+| Original | Detection |
+|:--------:|:---------:|
+| ![Original](assets/examples/edited.jpeg) | ✅ Detected |
+
+---
+
+### Why It Matters
+
+| Use Case | Benefit |
+|----------|---------|
+| **Storage Optimization** | Eliminating redundant copies to save petabytes of cloud storage |
+| **Spam & Integrity** | Preventing "repost bots" from flooding feeds and protecting original creators from copyright infringement |
+| **Search Relevance** | Ensuring a news aggregator doesn't show the same thumbnail ten times for one story |
+
+---
+
+## 💡 Solution Overview
+
+DejaView implements a **multi-layered detection pipeline** that combines:
+
+1. **Structure Check** — Early rejection of featureless images.
+2. **Parallel Hashing** — pHash and wHash run **simultaneously** for speed.
+3. **Smart Routing** — Based on Hamming distances, route to appropriate verification.
+4. **Histogram Verification** — Color/structure similarity check for ambiguous cases.
+5. **CLIP + DINO Models** — Deep semantic understanding via parallel model inference.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                            DejaView Pipeline                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                         ┌──► pHash Check ──┐                                 │
+│   Input Image ──────────┤                  ├──► Decision Router              │
+│                         └──► wHash Check ──┘        │                        │
+│                              (Parallel)             │                        │
+│                                                     ▼                        │
+│                    ┌────────────────────────────────────────────┐            │
+│                    │  Both ≤4   │  One >4, One ≤4  │  Both >4   │            │
+│                    ├────────────┼──────────────────┼────────────┤            │
+│                    │ DUPLICATE  │   Histogram      │ CLIP+DINO  │            │
+│                    │  (Fast)    │  (Color/Struct)  │ (Parallel) │            │
+│                    └────────────┴──────────────────┴────────────┘            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Input["📥 Input Layer"]
+        UI[Streamlit UI]
+        API[ndid_model.py]
+    end
+
+    subgraph Core["⚙️ Core Processing"]
+        DC[duplicate_checker.py]
+        
+        subgraph Hashing["🔐 Parallel Hashing"]
+            direction LR
+            PH[pHash Check]
+            WH[wHash Check]
+        end
+        
+        subgraph Router["🔀 Decision Router"]
+            DR{Hamming Distance Check}
+        end
+        
+        subgraph Verification["🔍 Verification Layer"]
+            HIST[Histogram Check]
+        end
+        
+        subgraph Semantic["🧠 Parallel Semantic Analysis"]
+            direction LR
+            CLIP[CLIP Model]
+            DINO[DINO Model]
+        end
+    end
+
+    subgraph Storage["💾 Vector Storage"]
+        subgraph FAISS["FAISS Indices"]
+            PI[(phash.index)]
+            WI[(whash.index)]
+            CI[(clip_index.index)]
+            DI[(dino_index.index)]
+        end
+        
+        subgraph Paths["Image Mappings"]
+            HP[image_paths.npy]
+            CP[clip_image_paths.npy]
+        end
+    end
+
+    %% Flow Connections
+    UI --> API
+    API --> DC
+    
+    %% Parallel Hashing Flow
+    DC --> PH & WH
+    PH & WH --> DR
+    
+    %% Decision Routing
+    DR -->|Both ≤4| DUP[✅ DUPLICATE]
+    DR -->|One >4, One ≤4| HIST
+    DR -->|Both >4| CLIP & DINO
+    
+    %% Storage Lookups
+    PH <--> PI
+    WH <--> WI
+    CLIP <--> CI
+    DINO <--> DI
+    
+    %% Path Retrievals
+    PI --> HP
+    WI --> HP
+    CI --> CP
+```
+
+---
+
+## 🔄 Pipeline Workflow
+
+### Phase 1: Preprocessing & Indexing (Offline)
+
+```mermaid
+flowchart LR
+    subgraph Preprocessing
+        A[Raw Images] --> B[Image Validation]
+        B --> C[EXIF Transpose]
+        C --> D[RGB Conversion]
+        D --> E[Preprocessed Images]
+    end
+    
+    subgraph Hashing
+        E --> F[Compute pHash]
+        E --> G[Compute wHash]
+        F --> H[Binary FAISS Index]
+        G --> I[Binary FAISS Index]
+    end
+    
+    subgraph CLIP_Indexing
+        E --> J[CLIP Embedding]
+        J --> K[L2 Normalize]
+        K --> L[Inner Product Index]
+    end
+    
+    H --> M[(phash.index)]
+    I --> N[(whash.index)]
+    L --> O[(clip_index.index)]
+```
+
+### Phase 2: Query & Detection (Online)
+
+```mermaid
+flowchart TD
+    A[Upload Image] --> SC{Structure Check?}
+    SC -->|Keypoints < 10| R[❌ REJECTED - Featureless]
+    SC -->|Pass| PARALLEL
+    
+    subgraph PARALLEL["⚡ Parallel Hash Computation"]
+        direction LR
+        PH[pHash Check]
+        WH[wHash Check]
+    end
+    
+    PARALLEL --> DR{Decision Router}
+    
+    %% Case 1: Both hashes match (distance ≤ 4)
+    DR -->|Both ≤ 4| DUP[✅ DUPLICATE - Hash Verified]
+    
+    %% Case 2: One matches, one doesn't
+    DR -->|One >4, One ≤4| HIST{Histogram Check}
+    HIST -->|Color Similar| SIM1[✅ SIMILAR - Color Match]
+    HIST -->|Structure Similar| SIM2[✅ SIMILAR - Structure Match]
+    HIST -->|No Match| UNIQUE1[❌ UNIQUE]
+    
+    %% Case 3: Both hashes don't match (distance > 4)
+    DR -->|Both >4| MODELS
+    
+    subgraph MODELS["🤖 Parallel Model Inference"]
+        direction LR
+        CLIP[CLIP Model]
+        DINO[DINO Model]
+    end
+    
+    MODELS --> MV{Model Verdict}
+    MV -->|Either ≥ 0.85| SIM3[✅ SIMILAR - Semantic Match]
+    MV -->|Both < 0.85| UNIQUE2[❌ UNIQUE]
+    
+    %% Results collection
+    DUP --> I[Return Result]
+    SIM1 --> I
+    SIM2 --> I
+    SIM3 --> I
+    UNIQUE1 --> I
+    UNIQUE2 --> I
+    R --> I
+    
+    I --> J[Display in UI]
+```
+
+---
+
+## 📁 Project Structure
+
+```
+DejaView/
+│
+├── 📄 streamlitUI.py          # Web interface for image upload & results
+├── 📄 ndid_model.py           # Bridge between UI and detection pipeline
+├── 📄 duplicate_checker.py    # Core detection logic with 3-stage pipeline
+├── 📄 add_to_database.py      # Script to incrementally add images to indices
+├── 📄 index_manager.py        # Functional logic for managing FAISS shards & indices
+│
+├── 📄 Final_preprocessing_hashing.py  # Image preprocessing & hash generation
+├── 📄 Faiss_implementation.py         # FAISS index creation for hashes
+├── 📄 clip_train.py                   # CLIP embedding & indexing
+├── 📄 download_model.py               # Download CLIP model for local use
+│
+├── 📂 final_hist/             # Visual Verification Logic
+│   └── 📄 hist_matching.py    # Histogram & ORB Feature matching
+│
+├── 📂 metrics/                # Evaluation Tools
+│   ├── 📄 create_evaluation_data.py
+│   ├── 📄 add_non_matching.py
+│   ├── 📄 combine_ground_truth.py
+│   └── 📄 evaluate.py
+│
+├── 📄 phash.index             # FAISS binary index for perceptual hashes
+├── 📄 whash.index             # FAISS binary index for wavelet hashes
+├── 📄 image_paths.npy         # Image path mappings for hash indices
+│
+├── 📂 CLIP/
+│   ├── clip_index.index       # FAISS index for CLIP embeddings
+│   ├── clip_image_paths.npy   # Image path mappings for CLIP
+│   └── clip_embeddings.npy    # Stored CLIP embeddings
+│
+├── 📂 local_clip_model/       # Cached CLIP model (ViT-B/32)
+├── 📂 images/                 # Dataset images
+│
+└── 📄 requirements.txt        # Python dependencies
+```
+
+### Module Descriptions
+
+| Module | Purpose |
+|--------|---------|
+| `streamlitUI.py` | Interactive web UI for uploading images and viewing detection results |
+| `ndid_model.py` | Handles file upload, creates temp files, and invokes the detection pipeline |
+| `duplicate_checker.py` | Main orchestrator: runs structure check, pHash/wHash/CLIP checks, and visual verification |
+| `index_manager.py` | Manages loading, searching, and saving of FAISS indices and shards |
+| `add_to_database.py` | Scans `images/` folder and adds new images to all indices (incremental update) |
+| `final_hist/hist_matching.py` | Implements Histogram comparison and ORB feature detection for verification |
+| `Final_preprocessing_hashing.py` | Image preprocessing (EXIF, RGB) and perceptual/wavelet hash computation |
+| `Faiss_implementation.py` | Builds FAISS binary indices from hash values |
+| `clip_train.py` | Generates CLIP embeddings and builds semantic search index |
+| `download_model.py` | Downloads and caches OpenAI CLIP model locally |
+| `metrics/*.py` | Suite of scripts for generating test data and calculating F1/Precision/Recall scores |
+
+---
+
+## 🛠️ Installation
+
+### Prerequisites
+
+- Python 3.8+
+- pip or conda
+
+### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/DejaView.git
+cd DejaView
+
+# 2. Create virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or
+.\venv\Scripts\activate   # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Download CLIP model (one-time)
+python download_model.py
+```
+
+### Dependencies
+
+```
+imagehash        # Perceptual & wavelet hashing
+faiss-cpu        # Vector similarity search
+numpy            # Numerical operations
+Pillow           # Image processing
+transformers     # CLIP model loading
+torch            # Deep learning backend
+streamlit        # Web UI framework
+opencv-python    # Computer Vision (histograms, ORB)
+```
+
+---
+
+## 🚀 Usage
+
+### Running the Web Interface
+
+```bash
+streamlit run streamlitUI.py
+```
+
+This will launch a local web server (typically at `http://localhost:8501`) where you can:
+
+1. **Upload an image** (JPG, PNG, BMP supported)
+2. **Click "Run NDID"** to analyze
+3. **View results**: Status, similarity percentage, method used, and matched image
+
+### Programmatic Usage
+
+```python
+from duplicate_checker import check_image_pipeline
+
+result = check_image_pipeline("path/to/your/image.jpg")
+
+print(result)
+# {
+#     "status": "Similar",           # Unique | Similar | Duplicate
+#     "similarity_percentage": 87.5,
+#     "matched_image_path": "/path/to/matched_image.png",
+#     "source_image_path": "path/to/your/image.jpg",
+#     "method": "clip"               # phash | whash | clip
+#     "method": "clip"               # phash | whash | clip
+# }
+```
+
+### 🛠️ Maintenance
+
+To add new images to the database without rebuilding the entire index:
+
+```bash
+python add_to_database.py
+```
+
+This script will:
+1. Scan the `images/` directory.
+2. Identify images that are not yet indexed.
+3. Compute hashes and embeddings for new images.
+4. Update the FAISS indices incrementally.
+
+---
+
+## 🔬 Technical Details
+
+### Detection Thresholds
+
+| Method | Threshold | Metric | Description |
+|--------|-----------|--------|-------------|
+| **pHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
+| **wHash** | ≤ 4 bits | Hamming Distance | 64-bit hash, max 4 bit difference |
+| **CLIP** | ≥ 0.85 | Cosine Similarity | 512-dim embeddings, inner product |
+| **Visual Verify** | ≥ 0.60 | Histogram & ORB Score | Combined color/structure/spatial score |
+| **Structure** | ≥ 10 | ORB Keypoints | Minimum feature count to process image |
+
+### Why This Architecture?
+
+```
+                    ┌─── pHash ───┐
+                    │   (~0.1ms)  │
+Input Image ────────┤             ├───► Decision Router ───► Verification
+                    │   (~0.2ms)  │
+                    └─── wHash ───┘
+                      (Parallel)
+```
+
+| Scenario | Action | Rationale |
+|----------|--------|----------|
+| **Both ≤ 4** | ✅ Duplicate | Both hashes agree → high confidence match |
+| **One >4, One ≤4** | Histogram | Ambiguous → check color/structure similarity |
+| **Both > 4** | CLIP + DINO | No hash match → use deep semantic models in parallel |
+
+### CLIP Model
+
+- **Architecture**: ViT-B/32 (Vision Transformer, patch size 32)
+- **Embedding Dimension**: 512
+- **Source**: OpenAI CLIP via HuggingFace Transformers
+- **Local Caching**: Model cached in `local_clip_model/` for offline use
+
+### FAISS Index Types
+
+| Index | Type | Use Case |
+|-------|------|----------|
+| `phash.index` | `IndexBinaryFlat` | Exact Hamming distance search |
+| `whash.index` | `IndexBinaryFlat` | Exact Hamming distance search |
+| `clip_index.index` | `IndexFlatIP` | Inner product (cosine) search |
+
+---
+
+## 📊 Evaluation Metrics
+
+The system is evaluated using the **F1 Score**, which balances precision and recall:
+
+```
+F1 = 2 × (Precision × Recall) / (Precision + Recall)
+```
+
+| Metric | Definition |
+|--------|------------|
+| **Precision** | Of all detected duplicates, how many are actually duplicates? |
+| **Recall** | Of all actual duplicates, how many did we detect? |
+| **F1 Score** | Harmonic mean of precision and recall |
+
+---
+
+## 📚 Datasets
+
+### Recommended Datasets
+
+| Dataset | Description | Link |
+|---------|-------------|------|
+| **Google Landmarks V2** | 5M+ landmark images with near-duplicates | [GitHub](https://github.com/cvdfoundation/google-landmark) |
+| **INRIA Copydays** | Benchmark for copy detection with distortions | [INRIA](https://thoth.inrialpes.fr/~jegou/data.php.html#copydays) |
+
+---
+
+## 🏛️ Architecture Summary
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                              DejaView System                               │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────┐  │
+│  │   Frontend  │     │                Backend Pipeline                       │  │
+│  │             │     │                                                       │  │
+│  │  Streamlit  │────▶│  ┌─────────┐                      ┌───────────────┐   │  │
+│  │     UI      │     │  │  pHash  │──┐                ┌──│     CLIP      │   │  │
+│  │             │     │  │ (Parallel) │ ► Router ──────┤  │   (Parallel)  │   │  │
+│  └─────────────┘     │  │  wHash  │──┘   │            └──│     DINO      │   │  │
+│                      │  └─────────┘      │               └───────────────┘   │  │
+│                      │                   ▼                                   │  │
+│                      │            ┌─────────────┐                            │  │
+│                      │            │  Histogram  │                            │  │
+│                      │            │   Check     │                            │  │
+│                      │            └─────────────┘                            │  │
+│                      │                                                       │  │
+│                      │  ┌────────────────────────────────────────────────┐   │  │
+│                      │  │              FAISS Vector Store                │   │  │
+│                      │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌─────────┐  │   │  │
+│                      │  │  │ phash  │ │ whash  │ │  clip  │ │  dino   │  │   │  │
+│                      │  │  │ .index │ │ .index │ │ .index │ │ .index  │  │   │  │
+│                      │  │  └────────┘ └────────┘ └────────┘ └─────────┘  │   │  │
+│                      │  └────────────────────────────────────────────────┘   │  │
+│                      └──────────────────────────────────────────────────────┘│
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 👥 Authors
+
+Built with ❤️ as part of the NDID (Near-Duplicate Image Detection) project.
+
+---
+
+## 📜 License
+
+This project is for educational purposes.
+
+---
+
+## 🎬 Project Demo
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID">
+    <img src="https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo on YouTube">
+  </a>
+</p>
+
+▶️ **[Click here to watch the full project demonstration](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)**
+
+
+---
+
+# Metrics & Evaluation
+
+This directory contains scripts to generate test data and evaluate the performance (F1 Score, Precision, Recall) of the Near-Duplicate Image Detection system.
+
+## Scripts
+
+### 1. `create_evaluation_data.py`
+Generates transformed versions of existing images (resize, crop, compress, color, watermark).
+- **Output**: `evaluation/test_images/should_match/`
+- **Generates**: `evaluation/ground_truth_matches.csv`
+
+### 2. `add_non_matching.py`
+Generates synthetic random images (noise, solid colors) that should NOT match any existing image.
+- **Output**: `evaluation/test_images/should_not_match/`
+- **Generates**: `evaluation/ground_truth_non_matches.csv`
+
+### 3. `combine_ground_truth.py`
+Combines the positive (matches) and negative (non-matches) ground truth files into one master file.
+- **Output**: `evaluation/ground_truth.csv`
+
+### 4. `evaluate.py`
+Runs the detection pipeline against the ground truth dataset and calculates metrics.
+- **Input**: `evaluation/ground_truth.csv`
+- **Output**: 
+    - Console Output: F1 Score, Confusion Matrix, Per-transform accuracy.
+    - File Output: `evaluation/detailed_results.csv`
+
+## How to Run
+
+Run the scripts in the following order from the project root (`d:\clipupdated\DejaView`):
+
+```bash
+# 1. Generate Positive Test Cases (Transformed Images)
+python metrics/create_evaluation_data.py
+
+# 2. Generate Negative Test Cases (Unique/Random Images)
+python metrics/add_non_matching.py
+
+# 3. Combine Ground Truth Data
+python metrics/combine_ground_truth.py
+
+# 4. Run Evaluation
+python metrics/evaluate.py
+```
+
+<p align="center">
+  <i>"Through the veil of Maya, DejaView sees the truth."</i>
+</p>
