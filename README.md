@@ -43,34 +43,28 @@ This system uses a **multi-stage funnel** to balance extreme speed with high acc
 ```mermaid
 graph TD
     subgraph Input
-    I[📥 Incoming Image]
+        I[Incoming Image]
     end
 
-    subgraph "Stage 1: Fast Filtering"
-    I -->|Pre-check| S{🎯 Structure Check}
-    S --"Too Few Features"--> R[🚫 REJECTED]
-    S --"Valid"--> H{🔐 Hash Check}
+    subgraph Stage1[Stage 1: Fast Filtering]
+        I --> S{Structure Check}
+        S -- Too Few Features --> R[Rejected]
+        S -- Valid --> H{Hash Check}
     end
 
-    subgraph "Stage 2: Semantic Analysis"
-    H --"Exact/Near Match"--> M[✅ SIMILAR (Fast)]
-    H --"No Match"--> D{🦕 DINOv2 Check}
-    D --"High Similarity (>55%)"--> M2[✅ SIMILAR (Robust)]
-    D --"Ambiguous (20-55%)"--> C{📎 CLIP Check}
-    end
-    
-    subgraph "Stage 3: Fallback"
-    C --"Confirmed"--> M3[✅ SIMILAR (Semantic)]
-    C --"Low Score"--> U[❌ UNIQUE]
-    D --"Low Complexity"--> U
+    subgraph Stage2[Stage 2: Semantic Analysis]
+        H -- Exact or Near Match --> M[Similar - Fast]
+        H -- No Match --> D[DINOv2 Check]
+        D -- Similarity > 55% --> M2[Similar - Robust]
+        D -- Ambiguous 20-55% --> C[CLIP Check]
     end
 
-    style I fill:#f9f,stroke:#333
-    style M fill:#bfb,stroke:#333
-    style M2 fill:#bfb,stroke:#333
-    style M3 fill:#bfb,stroke:#333
-    style U fill:#fbb,stroke:#333
-    style R fill:#ccc,stroke:#333
+    subgraph Stage3[Stage 3: Fallback]
+        C -- Confirmed --> M3[Similar - Semantic]
+        C -- Low Score --> U[Unique]
+        D -- Low Complexity --> U
+    end
+
 ```
 
 ---
@@ -182,13 +176,12 @@ DejaView/
 
 ## 🎬 Live Demo
 
-See **DejaView** in action! Watch how it handles resizing, cropping, and edits in real-time.
+Click below to watch the demo of DejaView in action.
 
-<div align="center">
-  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE">
-    <img src="https://img.youtube.com/vi/YOUR_VIDEO_ID_HERE/maxresdefault.jpg" alt="Watch the Demo" width="100%">
-  </a>
-</div>
+<p>
+  <a href="https://youtu.be/5kN7s5Fsn4A"><b>DEMO</b></a>
+</p>
+
 
 ---
 
